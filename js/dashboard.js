@@ -1,30 +1,12 @@
 const body = document.querySelector("body"),
-    modeToggle = body.querySelector(".mode-toggle");
-sidebar = body.querySelector("nav");
+    sidebar = body.querySelector("nav");
 sidebarToggle = body.querySelector(".sidebar-toggle");
-
-// Get mode from localStorage
-let getMode = localStorage.getItem("mode");
-if(getMode && getMode === "dark"){
-    body.classList.add("dark");
-}
 
 // Get sidebar status from localStorage
 let getStatus = localStorage.getItem("status");
 if(getStatus && getStatus === "close"){
     sidebar.classList.add("close");
 }
-
-// Toggle dark/light mode
-modeToggle.addEventListener("click", () => {
-    body.classList.toggle("dark");
-
-    if(body.classList.contains("dark")){
-        localStorage.setItem("mode", "dark");
-    } else {
-        localStorage.setItem("mode", "light");
-    }
-});
 
 // Toggle sidebar
 sidebarToggle.addEventListener("click", () => {
@@ -57,6 +39,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 // Simulate data loading
 document.addEventListener("DOMContentLoaded", function() {
+    // You would replace this with actual API calls in a real application
     setTimeout(() => {
         const loadingElements = document.querySelectorAll(".skeleton");
         loadingElements.forEach(el => {

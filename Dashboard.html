@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silver Harvest | Plant Monitoring</title>
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.0/css/line.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+<nav>
+    <div class="logo-name">
+        <div class="logo-image">
+            <i class="fas fa-leaf"></i>
+        </div>
+        <span class="logo_name">SILVER HARVEST</span>
+    </div>
+
+    <div class="menu-items">
+        <ul class="nav-links">
+            <li><a href="#">
+                <i class="uil uil-estate"></i>
+                <span class="link-name">Dashboard</span>
+            </a></li>
+            <li><a href="#">
+                <i class="uil uil-trees"></i>
+                <span class="link-name">Crop Monitoring</span>
+            </a></li>
+            <li><a href="#">
+                <i class="uil uil-chart"></i>
+                <span class="link-name">Field Analytics</span>
+            </a></li>
+            <li><a href="#">
+                <i class="uil uil-truck"></i>
+                <span class="link-name">Equipment</span>
+            </a></li>
+            <li><a href="#">
+                <i class="uil uil-users-alt"></i>
+                <span class="link-name">Staff</span>
+            </a></li>
+            <li><a href="#">
+                <i class="uil uil-shopping-cart"></i>
+                <span class="link-name">Orders</span>
+            </a></li>
+        </ul>
+
+        <ul class="logout-mode">
+            <li><a href="#">
+                <i class="uil uil-signout"></i>
+                <span class="link-name">Logout</span>
+            </a></li>
+        </ul>
+    </div>
+</nav>
+
+<section class="dashboard">
+    <div class="top">
+        <i class="uil uil-bars sidebar-toggle"></i>
+
+        <div class="search-box">
+            <i class="uil uil-search"></i>
+            <input type="text" placeholder="Search crops, fields...">
+        </div>
+
+        <div class="profile">
+            <img src="images/Plant-logo.png" alt="User">
+            <span class="username">Farm Manager</span>
+        </div>
+    </div>
+
+    <div class="dash-content">
+        <div class="overview">
+            <div class="title">
+                <i class="uil uil-tachometer-fast-alt"></i>
+                <span class="text">Field Overview</span>
+            </div>
+
+            <div class="boxes">
+                <div class="box box1">
+                    <i class="fas fa-seedling"></i>
+                    <span class="text">Active Crops</span>
+                    <span class="number">24</span>
+                </div>
+                <div class="box box2">
+                    <i class="fas fa-tractor"></i>
+                    <span class="text">Equipment</span>
+                    <span class="number">12</span>
+                </div>
+                <div class="box box3">
+                    <i class="fas fa-users"></i>
+                    <span class="text">Staff Members</span>
+                    <span class="number">18</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="activity">
+            <div class="title">
+                <i class="uil uil-clock-three"></i>
+                <span class="text">Recent Monitoring Logs</span>
+            </div>
+
+            <div class="activity-data">
+                <div class="data crop">
+                    <span class="data-title">Crop</span>
+                    <span class="data-list">Wheat</span>
+                    <span class="data-list">Corn</span>
+                    <span class="data-list">Soybeans</span>
+                    <span class="data-list">Rice</span>
+                    <span class="data-list">Barley</span>
+                </div>
+                <div class="data field">
+                    <span class="data-title">Field</span>
+                    <span class="data-list">North Field</span>
+                    <span class="data-list">East Field</span>
+                    <span class="data-list">South Field</span>
+                    <span class="data-list">West Field</span>
+                    <span class="data-list">Central Field</span>
+                </div>
+                <div class="data date">
+                    <span class="data-title">Date</span>
+                    <span class="data-list">2023-07-15</span>
+                    <span class="data-list">2023-07-14</span>
+                    <span class="data-list">2023-07-14</span>
+                    <span class="data-list">2023-07-13</span>
+                    <span class="data-list">2023-07-12</span>
+                </div>
+                <div class="data health">
+                    <span class="data-title">Health</span>
+                    <span class="data-list"><span class="healthy">Healthy</span></span>
+                    <span class="data-list"><span class="healthy">Healthy</span></span>
+                    <span class="data-list"><span class="warning">Warning</span></span>
+                    <span class="data-list"><span class="healthy">Healthy</span></span>
+                    <span class="data-list"><span class="critical">Critical</span></span>
+                </div>
+                <div class="data action">
+                    <span class="data-title">Action</span>
+                    <span class="data-list"><button class="view-btn">View</button></span>
+                    <span class="data-list"><button class="view-btn">View</button></span>
+                    <span class="data-list"><button class="action-btn">Treat</button></span>
+                    <span class="data-list"><button class="view-btn">View</button></span>
+                    <span class="data-list"><button class="action-btn">Harvest</button></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <div class="title">
+                <i class="uil uil-bolt"></i>
+                <span class="text">Quick Actions</span>
+            </div>
+            <div class="action-buttons">
+                <button class="action-button">
+                    <i class="fas fa-plus"></i>
+                    <span>Add New Crop</span>
+                </button>
+                <button class="action-button">
+                    <i class="fas fa-tasks"></i>
+                    <span>Schedule Task</span>
+                </button>
+                <button class="action-button">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Generate Report</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="js/dashboard.js"></script>
+</body>
+</html>

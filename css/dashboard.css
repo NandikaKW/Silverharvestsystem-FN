@@ -8,10 +8,9 @@
 }
 
 :root {
-    /* ===== Colors ===== */
-    --primary-color: #04482C;
-    --primary-light: #0a6e48;
-    --primary-dark: #033021;
+    --primary-color: #88B44E;
+    --primary-light: #9FCC6B; /* lighter shade */
+    --primary-dark: #6E923E;  /* darker shade */
     --panel-color: #FFF;
     --text-color: #000;
     --black-light-color: #707070;

@@ -1,24 +1,16 @@
 :root {
     --primary-color: #3498db;
-    --primary-light: #5dade2; /* lighter shade */
-    --primary-dark: #2e86c1;  /* darker shade */
     --secondary-color: #2980b9;
     --accent-color: #e74c3c;
-    --text-color: #333;
-    --light-text: #707070;
-    --bg-color: #f8f9fa;
-    --card-bg: #FFF;
-    --border-color: #e6e5e5;
+    --text-color: #2c3e50;
+    --light-text: #7f8c8d;
+    --bg-color: #f5f7f9;
+    --card-bg: #ffffff;
+    --border-color: #eaeff2;
     --positive: #27ae60;
     --negative: #e74c3c;
     --warning: #f39c12;
-    --shadow: 0 5px 15px rgba(4, 72, 44, 0.1);
-    --box1-color: #E8F5E9;
-    --box2-color: #E8F5E9;
-    --box3-color: #E8F5E9;
-    --title-icon-color: #fff;
-    --tran-05: all 0.5s ease;
-    --tran-03: all 0.3s ease;
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -39,12 +31,6 @@ body {
     margin: 0 auto;
     padding: 2rem;
 }
-.chart-container {
-    margin: 10px 0;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
 
 /* Header Styles */
 .header {
@@ -61,7 +47,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0.8rem;
-    color: #2c3e50;
+    color: var(--text-color);
     font-weight: 700;
 }
 
@@ -70,87 +56,9 @@ body {
     gap: 1rem;
 }
 
-/* Modern Report Styling */
-.report-container {
-    margin-top: 20px;
-    max-height: 400px;
-    overflow-y: auto;
-    padding-right: 10px;
-}
-
-.report-item {
-    background: #f8f9fa;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 12px;
-    border-left: 4px solid var(--primary-color);
-}
-
-.report-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.report-stats {
-    font-weight: 600;
-    color: var(--primary-color);
-}
-
-.progress-bar {
-    height: 8px;
-    background: #e9ecef;
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-.progress-fill {
-    height: 100%;
-    background: var(--primary-color);
-    border-radius: 4px;
-    transition: width 0.5s ease;
-}
-
-/* SweetAlert Close Button */
-.swal-close-btn {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    color: #6c757d;
-    cursor: pointer;
-    transition: color 0.3s ease;
-}
-
-.swal-close-btn:hover {
-    color: var(--primary-color);
-}
-
-/* Custom scrollbar for report container */
-.report-container::-webkit-scrollbar {
-    width: 6px;
-}
-
-.report-container::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.report-container::-webkit-scrollbar-thumb {
-    background: #c2c2c2;
-    border-radius: 10px;
-}
-
-.report-container::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
-}
-
 /* Button Styles */
 .btn-primary {
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
     border: none;
     padding: 0.8rem 1.8rem;
@@ -161,13 +69,12 @@ body {
     align-items: center;
     gap: 0.7rem;
     box-shadow: var(--shadow);
-    transition: var(--tran-03);
+    transition: all 0.3s ease;
 }
 
 .btn-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 25px rgba(4, 72, 44, 0.25);
-    background: linear-gradient(135deg, var(--primary-light), var(--primary-color));
+    box-shadow: 0 12px 25px rgba(52, 152, 219, 0.25);
 }
 
 .btn-secondary {
@@ -181,12 +88,11 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    transition: var(--tran-03);
+    transition: all 0.3s ease;
 }
 
 .btn-secondary:hover {
-    background: rgba(4, 72, 44, 0.1);
-    transform: translateY(-2px);
+    background: rgba(52, 152, 219, 0.1);
 }
 
 .btn-icon {
@@ -201,11 +107,11 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--tran-03);
+    transition: all 0.3s ease;
 }
 
 .btn-icon:hover {
-    background-color: rgba(4, 72, 44, 0.1);
+    background-color: rgba(0, 0, 0, 0.05);
     color: var(--primary-color);
 }
 
@@ -219,20 +125,19 @@ body {
 
 .stat-card {
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 18px;
     padding: 1.8rem;
     display: flex;
     align-items: center;
     gap: 1.2rem;
     box-shadow: var(--shadow);
-    transition: var(--tran-03);
-    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
     border-left: 5px solid var(--primary-color);
 }
 
 .stat-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 15px 35px rgba(4, 72, 44, 0.15);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 .stat-icon {
@@ -244,7 +149,7 @@ body {
     justify-content: center;
     color: white;
     font-size: 1.5rem;
-    background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
 }
 
 .stat-info h4 {
@@ -256,18 +161,17 @@ body {
 
 .stat-info p {
     font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--primary-color);
+    font-weight: 700;
+    color: var(--text-color);
 }
 
 /* Table Card */
 .table-card {
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 18px;
     box-shadow: var(--shadow);
     overflow: hidden;
     padding: 2rem;
-    border: 1px solid var(--border-color);
 }
 
 .table-header {
@@ -281,7 +185,7 @@ body {
 
 .table-header h3 {
     font-size: 1.4rem;
-    color: var(--primary-color);
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 0.7rem;
@@ -291,21 +195,6 @@ body {
 .table-actions {
     display: flex;
     gap: 0.8rem;
-    align-items: center;
-}
-
-.table-actions input {
-    padding: 0.5rem;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    transition: var(--tran-03);
-}
-
-.table-actions input:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(4, 72, 44, 0.2);
 }
 
 table {
@@ -353,9 +242,9 @@ tr:hover {
 }
 
 .status-active {
-    background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(46, 204, 113, 0.15));
+    background: linear-gradient(135deg, rgba(39, 174, 96, 0.2), rgba(39, 174, 96, 0.15));
     color: var(--positive);
-    border: 1px solid rgba(46, 204, 113, 0.3);
+    border: 1px solid rgba(39, 174, 96, 0.3);
 }
 
 .status-inactive {
@@ -384,7 +273,7 @@ tr:hover {
     justify-content: center;
     cursor: pointer;
     font-size: 1rem;
-    transition: var(--tran-03);
+    transition: all 0.3s ease;
     border: none;
 }
 
@@ -396,7 +285,6 @@ tr:hover {
 .edit-btn:hover {
     background-color: #ffc107;
     color: white;
-    transform: translateY(-2px);
 }
 
 .delete-btn {
@@ -407,7 +295,6 @@ tr:hover {
 .delete-btn:hover {
     background-color: #dc3545;
     color: white;
-    transform: translateY(-2px);
 }
 
 .view-btn {
@@ -418,7 +305,6 @@ tr:hover {
 .view-btn:hover {
     background-color: #17a2b8;
     color: white;
-    transform: translateY(-2px);
 }
 
 /* Popup Styles */
@@ -434,7 +320,7 @@ tr:hover {
     align-items: center;
     opacity: 0;
     visibility: hidden;
-    transition: var(--tran-05);
+    transition: all 0.3s ease;
     z-index: 1000;
     padding: 1rem;
 }
@@ -446,7 +332,7 @@ tr:hover {
 
 .popup-content {
     background: white;
-    border-radius: 12px;
+    border-radius: 20px;
     width: 100%;
     max-width: 700px;
     max-height: 90vh;
@@ -454,7 +340,6 @@ tr:hover {
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
     transform: translateY(-30px);
     transition: transform 0.4s ease;
-    border: 1px solid var(--border-color);
 }
 
 .popup.active .popup-content {
@@ -468,12 +353,12 @@ tr:hover {
     align-items: center;
     border-bottom: 1px solid var(--border-color);
     background: linear-gradient(to right, #f8f9fa, #ffffff);
-    border-radius: 12px 12px 0 0;
+    border-radius: 20px 20px 0 0;
 }
 
 .popup-header h3 {
     font-size: 1.5rem;
-    color: var(--primary-color);
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 0.8rem;
@@ -514,9 +399,9 @@ tr:hover {
     width: 100%;
     padding: 1rem;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     font-size: 1rem;
-    transition: var(--tran-03);
+    transition: all 0.3s ease;
     background-color: #f8f9fa;
 }
 
@@ -525,7 +410,7 @@ tr:hover {
 .form-group textarea:focus {
     border-color: var(--primary-color);
     outline: none;
-    box-shadow: 0 0 0 3px rgba(4, 72, 44, 0.2);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     background-color: #fff;
 }
 
@@ -547,11 +432,10 @@ tr:hover {
 .report-section {
     margin-top: 2.5rem;
     background: var(--card-bg);
-    border-radius: 12px;
+    border-radius: 18px;
     box-shadow: var(--shadow);
     overflow: hidden;
     padding: 2rem;
-    border: 1px solid var(--border-color);
 }
 
 .report-header {
@@ -565,7 +449,7 @@ tr:hover {
 
 .report-header h3 {
     font-size: 1.4rem;
-    color: var(--primary-color);
+    color: var(--text-color);
     display: flex;
     align-items: center;
     gap: 0.7rem;
@@ -580,20 +464,19 @@ tr:hover {
 
 .report-card {
     background: #f8f9fa;
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1.5rem;
-    transition: var(--tran-03);
-    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
 }
 
 .report-card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(4, 72, 44, 0.1);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 .report-card h4 {
     font-size: 1.1rem;
-    color: var(--primary-color);
+    color: var(--text-color);
     margin-bottom: 1rem;
     display: flex;
     align-items: center;
@@ -623,6 +506,39 @@ tr:hover {
     gap: 0.7rem;
     font-size: 1.4rem;
     color: var(--text-color);
+}
+
+.detail-item {
+    margin-bottom: 1.2rem;
+    padding: 0.8rem;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+}
+
+.detail-item strong {
+    color: var(--text-color);
+    margin-right: 0.5rem;
+}
+
+/* Chart container styles */
+.chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin: 1.5rem 0;
+}
+
+.report-modal {
+    max-width: 900px;
+}
+
+.chart-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color);
 }
 
 @keyframes spin {
@@ -702,28 +618,10 @@ tr:hover {
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
+    background: #c1c1c1;
     border-radius: 10px;
-    transition: var(--tran-03);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-light);
-}
-
-/* Detail items in view popup */
-.detail-item {
-    margin-bottom: 1.2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.detail-item:last-child {
-    border-bottom: none;
-}
-
-.detail-item strong {
-    color: var(--text-color);
-    display: inline-block;
-    min-width: 120px;
+    background: #a8a8a8;
 }

@@ -569,40 +569,65 @@ $(document).ready(function() {
         }
     }
 
-    // Report generation functions - FIXED VERSION (no exclamation mark)
+    // Report generation functions with different chart types
     window.generateStatusReport = function() {
         const statusCounts = countByProperty('status');
+        const categories = Object.keys(statusCounts);
+        const data = Object.values(statusCounts);
+        const colors = categories.map(status => getStatusColor(status));
 
         Swal.fire({
             title: '<i class="fas fa-chart-pie" style="color: #3498db;"></i> Equipment Status Distribution',
             html: `
-            <div class="report-container">
-                ${Object.entries(statusCounts).map(([status, count]) => `
-                    <div class="report-item">
-                        <div class="report-header">
-                            <span class="status-badge ${getStatusClass(status)}">
-                                <i class="${getStatusIcon(status)}"></i>${status}
-                            </span>
-                            <div class="report-stats">
-                                <span>${count} (${Math.round((count / equipmentData.length) * 100)}%)</span>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(count / equipmentData.length) * 100}%; background: ${getStatusColor(status)};"></div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
+            <div id="statusChartContainer" style="width: 100%; height: 300px;"></div>
         `,
-            width: '700px',
+            width: '800px',
             showConfirmButton: false,
             showCloseButton: true,
             closeButtonHtml: '<i class="fas fa-times"></i>',
-            customClass: {
-                popup: 'custom-swal-popup',
-                closeButton: 'swal-close-btn'
-            },
             didOpen: () => {
+                // Initialize and render the chart
+                Highcharts.chart('statusChartContainer', {
+                    chart: {
+                        type: 'pie',
+                        height: 300
+                    },
+                    title: {
+                        text: 'Equipment Status Distribution'
+                    },
+                    tooltip: {
+                        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                    },
+                    accessibility: {
+                        point: {
+                            valueSuffix: '%'
+                        }
+                    },
+                    plotOptions: {
+                        pie: {
+                            allowPointSelect: true,
+                            cursor: 'pointer,',
+                            dataLabels: {
+                                enabled: true,
+                                format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                            }
+                        }
+                    },
+                    series: [{
+                        name: 'Equipment',
+                        colorByPoint: true,
+                        data: categories.map((category, index) => ({
+                            name: category,
+                            y: data[index],
+                            color: colors[index]
+                        }))
+                    }],
+                    credits: {
+                        enabled: false
+                    }
+                });
+
+                // Hide the default SweetAlert icon
                 const icon = document.querySelector('.swal2-icon.swal2-info');
                 if (icon) {
                     icon.style.display = 'none';
@@ -610,7 +635,6 @@ $(document).ready(function() {
             }
         });
     };
-
     // Helper function to get icon for status
     function getStatusIcon(status) {
         switch (status) {
@@ -623,35 +647,68 @@ $(document).ready(function() {
 
     window.generateTypeReport = function() {
         const typeCounts = countByProperty('type');
+        const categories = Object.keys(typeCounts);
+        const data = Object.values(typeCounts);
 
         Swal.fire({
             title: '<i class="fas fa-tags" style="color: #3498db;"></i> Equipment Type Analysis',
             html: `
-            <div class="report-container">
-                ${Object.entries(typeCounts).map(([type, count]) => `
-                    <div class="report-item">
-                        <div class="report-header">
-                            <strong>${type}</strong>
-                            <div class="report-stats">
-                                <span>${count} (${Math.round((count / equipmentData.length) * 100)}%)</span>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(count / equipmentData.length) * 100}%;"></div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
+            <div id="typeChartContainer" style="width: 100%; height: 300px;"></div>
         `,
-            width: '700px',
+            width: '800px',
             showConfirmButton: false,
             showCloseButton: true,
             closeButtonHtml: '<i class="fas fa-times"></i>',
-            customClass: {
-                popup: 'custom-swal-popup',
-                closeButton: 'swal-close-btn'
-            },
             didOpen: () => {
+                // Initialize and render the chart
+                Highcharts.chart('typeChartContainer', {
+                    chart: {
+                        type: 'bar',
+                        height: 300
+                    },
+                    title: {
+                        text: 'Equipment Type Analysis'
+                    },
+                    xAxis: {
+                        categories: categories,
+                        title: {
+                            text: null
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Count',
+                            align: 'high'
+                        },
+                        labels: {
+                            overflow: 'justify'
+                        }
+                    },
+                    tooltip: {
+                        valueSuffix: ' units'
+                    },
+                    plotOptions: {
+                        bar: {
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: 'Equipment Count',
+                        data: data,
+                        color: '#3498db'
+                    }]
+                });
+
+                // Hide the default SweetAlert icon
                 const icon = document.querySelector('.swal2-icon.swal2-info');
                 if (icon) {
                     icon.style.display = 'none';
@@ -661,35 +718,66 @@ $(document).ready(function() {
     };
     window.generateFieldReport = function() {
         const fieldCounts = countByProperty('fieldCode');
+        const categories = Object.keys(fieldCounts);
+        const data = Object.values(fieldCounts);
 
         Swal.fire({
             title: '<i class="fas fa-map-marked-alt" style="color: #3498db;"></i> Equipment Field Allocation',
             html: `
-            <div class="report-container">
-                ${Object.entries(fieldCounts).map(([field, count]) => `
-                    <div class="report-item">
-                        <div class="report-header">
-                            <strong>${field}</strong>
-                            <div class="report-stats">
-                                <span>${count} (${Math.round((count / equipmentData.length) * 100)}%)</span>
-                            </div>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${(count / equipmentData.length) * 100}%;"></div>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
+            <div id="fieldChartContainer" style="width: 100%; height: 300px;"></div>
         `,
-            width: '700px',
+            width: '800px',
             showConfirmButton: false,
             showCloseButton: true,
             closeButtonHtml: '<i class="fas fa-times"></i>',
-            customClass: {
-                popup: 'custom-swal-popup',
-                closeButton: 'swal-close-btn'
-            },
             didOpen: () => {
+                // Initialize and render the chart
+                Highcharts.chart('fieldChartContainer', {
+                    chart: {
+                        type: 'column',
+                        height: 300
+                    },
+                    title: {
+                        text: 'Equipment Field Allocation'
+                    },
+                    xAxis: {
+                        categories: categories,
+                        title: {
+                            text: 'Field Code'
+                        }
+                    },
+                    yAxis: {
+                        min: 0,
+                        title: {
+                            text: 'Equipment Count'
+                        }
+                    },
+                    tooltip: {
+                        pointFormat: '<b>{point.y}</b> equipment in {point.x}'
+                    },
+                    plotOptions: {
+                        column: {
+                            pointPadding: 0.2,
+                            borderWidth: 0,
+                            dataLabels: {
+                                enabled: true
+                            }
+                        }
+                    },
+                    legend: {
+                        enabled: false
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    series: [{
+                        name: 'Equipment Count',
+                        data: data,
+                        color: '#6c5ce7'
+                    }]
+                });
+
+                // Hide the default SweetAlert icon
                 const icon = document.querySelector('.swal2-icon.swal2-info');
                 if (icon) {
                     icon.style.display = 'none';

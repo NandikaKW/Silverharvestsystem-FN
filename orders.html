@@ -551,6 +551,21 @@
                 font-weight: 600;
                 color: var(--dark);
             }
+
+            /* Back button responsive adjustments */
+            .header-back-btn {
+                top: 15px;
+                left: 15px;
+            }
+
+            .back-button {
+                padding: 0.4rem 1rem;
+                font-size: 0.8rem;
+            }
+
+            .back-button i {
+                margin-right: 0.3rem;
+            }
         }
 
         @media (max-width: 576px) {
@@ -577,6 +592,25 @@
                 gap: 1rem;
                 align-items: flex-start;
             }
+
+            /* Back button adjustments for small screens */
+            .header-back-btn {
+                top: 20px;
+                left: 20px;
+            }
+
+            .back-button {
+                padding: 0.35rem 0.8rem;
+                font-size: 0.75rem;
+            }
+
+            .back-button span {
+                display: none; /* Hide text on very small screens */
+            }
+
+            .back-button i {
+                margin-right: 0;
+            }
         }
     </style>
 </head>
@@ -590,6 +624,19 @@
             <img class="w-100" src="images/home-image-02.webp" alt="Order Management">
             <div class="header-overlay"></div>
             <div class="header-content">
+
+                <!-- Back Button -->
+                <div class="header-back-btn mb-3" style="position: absolute; top: 20px; left: 20px; z-index: 4;">
+                    <a href="index.html" class="btn back-button" style="background: rgba(255, 255, 255, 0.15);
+               backdrop-filter: blur(10px);
+               border: 1px solid rgba(255, 255, 255, 0.2);
+               color: white;
+               border-radius: 50px;
+               padding: 0.5rem 1.2rem;">
+                        <i class="fas fa-arrow-left me-1"></i>Back to Home
+                    </a>
+                </div>
+
                 <div class="header-badge">
                     <div class="badge-icon">
                         <i class="fas fa-clipboard-list"></i>
@@ -615,7 +662,6 @@
             </div>
         </div>
     </div>
-
     <!-- Notification Alert -->
     <div id="notification" class="alert alert-dismissible fade" role="alert">
         <span id="notification-message"></span>
@@ -784,7 +830,10 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label for="userId" class="form-label">User ID</label>
-                            <input type="text" class="form-control" id="userId" required>
+                            <select class="form-select" id="userId" required>
+                                <option value="">Select User ID</option>
+                                <!-- Will be populated dynamically -->
+                            </select>
                         </div>
                         <div class="col-md-6">
                             <label for="orderDate" class="form-label">Order Date</label>
@@ -882,6 +931,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // API Base URL - Update this to match your backend URL
     const API_BASE_URL = 'http://localhost:8080/api/v1';
@@ -898,22 +948,26 @@
 
     // Show notification function
     function showNotification(message, type = 'success') {
-        notificationMessage.textContent = message;
-        notification.className = `alert alert-${type} alert-dismissible fade show`;
-        notification.style.display = 'block';
+        // Use SweetAlert for notifications instead of custom element
+        const icon = type === 'success' ? 'success' :
+            type === 'danger' ? 'error' : 'info';
 
-        // Auto hide after 5 seconds
-        setTimeout(() => {
-            hideNotification();
-        }, 5000);
+        Swal.fire({
+            icon: icon,
+            title: type === 'success' ? 'Success' :
+                type === 'danger' ? 'Error' : 'Info',
+            text: message,
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true
+        });
     }
 
-    // Hide notification
+    // Hide notification (kept for compatibility but not used with SweetAlert)
     function hideNotification() {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            notification.style.display = 'none';
-        }, 500);
+        // Not used with SweetAlert notifications
     }
 
     // Format date for display
@@ -962,14 +1016,30 @@
             if (!response.ok) {
                 throw new Error('Failed to fetch orders');
             }
-            const orders=await response.json();
+            const orders = await response.json();
             displayOrders(orders);
         } catch (error) {
             console.error('Error loading orders:', error);
             showNotification('Error loading orders: ' + error.message, 'danger');
         }
     }
+    // Function to generate existing User IDs
+    function generateUserIds(count = 10) {
+        const userIds = [];
+        for (let i = 1; i <= count; i++) {
+            userIds.push(`U${i.toString().padStart(3, '0')}`);
+        }
+        return userIds;
+    }
 
+    // Function to generate existing Crop IDs
+    function generateCropIds(count = 10) {
+        const cropIds = [];
+        for (let i = 1; i <= count; i++) {
+            cropIds.push(`C${i.toString().padStart(3, '0')}`);
+        }
+        return cropIds;
+    }
 
     // Display orders in the table
     function displayOrders(orders) {
@@ -977,33 +1047,38 @@
 
         if (orders.length === 0) {
             ordersTableBody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center">No orders found</td>
-        </tr>
-      `;
+                <tr>
+                    <td colspan="6" class="text-center">No orders found</td>
+                </tr>
+            `;
             return;
         }
 
         orders.forEach(order => {
             const row = document.createElement('tr');
+            // Add data attributes for filtering
+            row.setAttribute('data-order-id', order.orderId);
+            row.setAttribute('data-user-id', order.userId);
+            row.setAttribute('data-status', order.status);
+
             row.innerHTML = `
-        <td>${order.orderId}</td>
-        <td>${order.userId}</td>
-        <td>${formatDate(order.orderDate)}</td>
-        <td>${formatCurrency(order.totalAmount)}</td>
-        <td><span class="status-badge ${getStatusBadgeClass(order.status)}">${order.status}</span></td>
-        <td class="action-buttons">
-          <button class="btn btn-sm btn-info view-order" data-id="${order.orderId}">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn btn-sm btn-warning edit-order" data-id="${order.orderId}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-sm btn-danger delete-order" data-id="${order.orderId}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      `;
+                <td>${order.orderId}</td>
+                <td>${order.userId}</td>
+                <td>${formatDate(order.orderDate)}</td>
+                <td>${formatCurrency(order.totalAmount)}</td>
+                <td><span class="status-badge ${getStatusBadgeClass(order.status)}">${order.status}</span></td>
+                <td class="action-buttons">
+                    <button class="btn btn-sm btn-info view-order" data-id="${order.orderId}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-sm btn-warning edit-order" data-id="${order.orderId}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger delete-order" data-id="${order.orderId}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
             ordersTableBody.appendChild(row);
         });
 
@@ -1052,10 +1127,10 @@
 
         if (orderDetails.length === 0) {
             orderDetailsTableBody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center">No order details found</td>
-        </tr>
-      `;
+                <tr>
+                    <td colspan="6" class="text-center">No order details found</td>
+                </tr>
+            `;
             return;
         }
 
@@ -1064,13 +1139,13 @@
             const subtotal = detail.quantity * detail.price;
 
             row.innerHTML = `
-        <td>${detail.orderDetailId}</td>
-        <td>${detail.orderId}</td>
-        <td>${detail.cropCode}</td>
-        <td>${detail.quantity}</td>
-        <td>${formatCurrency(detail.price)}</td>
-        <td>${formatCurrency(subtotal)}</td>
-      `;
+                <td>${detail.orderDetailId}</td>
+                <td>${detail.orderId}</td>
+                <td>${detail.cropCode}</td>
+                <td>${detail.quantity}</td>
+                <td>${formatCurrency(detail.price)}</td>
+                <td>${formatCurrency(subtotal)}</td>
+            `;
             orderDetailsTableBody.appendChild(row);
         });
     }
@@ -1101,19 +1176,19 @@
                 order.orderDetails.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-            <td>${item.cropCode}</td>
-            <td>${item.quantity}</td>
-            <td>${formatCurrency(item.price)}</td>
-            <td>${formatCurrency(item.quantity * item.price)}</td>
-          `;
+                        <td>${item.cropCode}</td>
+                        <td>${item.quantity}</td>
+                        <td>${formatCurrency(item.price)}</td>
+                        <td>${formatCurrency(item.quantity * item.price)}</td>
+                    `;
                     orderItemsContainer.appendChild(row);
                 });
             } else {
                 orderItemsContainer.innerHTML = `
-          <tr>
-            <td colspan="4" class="text-center">No items found for this order</td>
-          </tr>
-        `;
+                    <tr>
+                        <td colspan="4" class="text-center">No items found for this order</td>
+                    </tr>
+                `;
             }
 
             // Show the modal
@@ -1192,7 +1267,18 @@
 
     // Delete an order
     async function deleteOrder(orderId) {
-        if (!confirm('Are you sure you want to delete this order?')) {
+        // Use SweetAlert for confirmation
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        });
+
+        if (!result.isConfirmed) {
             return;
         }
 
@@ -1223,6 +1309,18 @@
         document.getElementById('orderId').value = '';
         document.getElementById('orderDate').value = new Date().toISOString().slice(0, 16);
         document.getElementById('orderDetailsContainer').innerHTML = '';
+
+        // Populate user dropdown with generated IDs
+        const userIdSelect = document.getElementById('userId');
+        userIdSelect.innerHTML = '<option value="">Select User ID</option>';
+        const userIds = generateUserIds();
+        userIds.forEach(userId => {
+            const option = document.createElement('option');
+            option.value = userId;
+            option.textContent = userId;
+            userIdSelect.appendChild(option);
+        });
+
         calculateTotal();
         orderModal.show();
     }
@@ -1239,7 +1337,21 @@
 
             // Populate the form
             document.getElementById('orderId').value = order.orderId;
-            document.getElementById('userId').value = order.userId;
+
+            // Populate user dropdown with generated IDs
+            const userIdSelect = document.getElementById('userId');
+            userIdSelect.innerHTML = '<option value="">Select User ID</option>';
+            const userIds = generateUserIds();
+            userIds.forEach(userId => {
+                const option = document.createElement('option');
+                option.value = userId;
+                option.textContent = userId;
+                if (userId === order.userId) {
+                    option.selected = true;
+                }
+                userIdSelect.appendChild(option);
+            });
+
             document.getElementById('orderDate').value = order.orderDate ? order.orderDate.slice(0, 16) : '';
             document.getElementById('status').value = order.status;
             document.getElementById('totalAmount').value = order.totalAmount;
@@ -1270,26 +1382,36 @@
 
         const detailElement = document.createElement('div');
         detailElement.className = 'order-detail-row';
+
+        // Generate crop options
+        const cropIds = generateCropIds();
+        const cropOptions = cropIds.map(cropId =>
+            `<option value="${cropId}" ${cropCode === cropId ? 'selected' : ''}>${cropId}</option>`
+        ).join('');
+
         detailElement.innerHTML = `
-      <div class="row">
-        <div class="col-md-5">
-          <label class="form-label">Crop Code</label>
-          <input type="text" class="form-control" name="cropCode" value="${cropCode}" required>
+        <div class="row">
+            <div class="col-md-5">
+                <label class="form-label">Crop Code</label>
+                <select class="form-select" name="cropCode" required>
+                    <option value="">Select Crop Code</option>
+                    ${cropOptions}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Quantity</label>
+                <input type="number" class="form-control" name="quantity" value="${quantity}" min="1" required onchange="calculateTotal()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Price</label>
+                <input type="number" step="0.01" class="form-control" name="price" value="${price}" min="0" required onchange="calculateTotal()">
+            </div>
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button" class="btn btn-sm btn-danger remove-detail" onclick="removeDetailRow(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
         </div>
-        <div class="col-md-3">
-          <label class="form-label">Quantity</label>
-          <input type="number" class="form-control" name="quantity" value="${quantity}" min="1" required onchange="calculateTotal()">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Price</label>
-          <input type="number" step="0.01" class="form-control" name="price" value="${price}" min="0" required onchange="calculateTotal()">
-        </div>
-        <div class="col-md-1 d-flex align-items-end">
-          <button type="button" class="btn btn-sm btn-danger remove-detail" onclick="removeDetailRow(this)">
-            <i class="fas fa-times"></i>
-          </button>
-        </div>
-      </div>
     `;
 
         container.appendChild(detailElement);
@@ -1304,6 +1426,18 @@
 
     // Handle order form submission
     async function handleOrderSubmit() {
+        // Validate form before submission
+        const form = document.getElementById('orderForm');
+        if (!form.checkValidity()) {
+            // Show validation error with SweetAlert
+            Swal.fire({
+                icon: 'error',
+                title: 'Form Validation Error',
+                text: 'Please fill all required fields correctly.',
+            });
+            return;
+        }
+
         const orderId = document.getElementById('orderId').value;
         const orderData = {
             userId: document.getElementById('userId').value,
@@ -1316,12 +1450,50 @@
         orderData.orderDetails = [];
         const detailElements = document.querySelectorAll('#orderDetailsContainer .order-detail-row');
 
-        detailElements.forEach(detail => {
-            orderData.orderDetails.push({
-                cropCode: detail.querySelector('input[name="cropCode"]').value,
-                quantity: parseInt(detail.querySelector('input[name="quantity"]').value),
-                price: parseFloat(detail.querySelector('input[name="price"]').value)
+        // Validate order details
+        if (detailElements.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please add at least one order detail.',
             });
+            return;
+        }
+
+        let hasDetailError = false;
+        detailElements.forEach(detail => {
+            const cropCode = detail.querySelector('select[name="cropCode"]').value; // FIXED: Changed from input to select
+            const quantity = parseInt(detail.querySelector('input[name="quantity"]').value);
+            const price = parseFloat(detail.querySelector('input[name="price"]').value);
+
+            if (!cropCode || isNaN(quantity) || isNaN(price)) {
+                hasDetailError = true;
+            }
+
+            orderData.orderDetails.push({
+                cropCode: cropCode,
+                quantity: quantity,
+                price: price
+            });
+        });
+
+        if (hasDetailError) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please check all order detail fields.',
+            });
+            return;
+        }
+
+        // Show loading indicator
+        Swal.fire({
+            title: orderId ? 'Updating Order...' : 'Creating Order...',
+            text: 'Please wait',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
         });
 
         if (orderId) {
@@ -1331,45 +1503,10 @@
             // Create new order
             await createOrder(orderData);
         }
+
+        // Close loading indicator
+        Swal.close();
     }
-
-    // Initialize the application
-    function initApp() {
-        // Load initial data
-        loadOrders();
-        loadOrderDetails();
-
-        // Toggle instructions
-        document.getElementById('toggleInstructions').addEventListener('click', function() {
-            const instructions = document.getElementById('instructions');
-            instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
-        });
-
-        // Create order button click
-        document.querySelector('[data-bs-target="#createOrderModal"]').addEventListener('click', openCreateOrderModal);
-
-        // Order form submission
-        document.getElementById('submitOrderBtn').addEventListener('click', handleOrderSubmit);
-
-        // Add order detail button click
-        document.getElementById('addOrderDetailBtn').addEventListener('click', function() {
-            addOrderDetailRow();
-        });
-
-        // Edit order button in view modal
-        document.getElementById('editOrderBtn').addEventListener('click', function() {
-            const orderId = document.getElementById('viewOrderId').textContent;
-            const viewOrderModal = bootstrap.Modal.getInstance(document.getElementById('viewOrderModal'));
-            viewOrderModal.hide();
-            editOrder(orderId);
-        });
-    }
-
-    // Initialize the app when the DOM is loaded
-    document.addEventListener('DOMContentLoaded', initApp);
-
-
-    // Add this code to your existing JavaScript
 
     // Search and filter orders
     function filterOrders() {
@@ -1422,81 +1559,28 @@
         };
     }
 
-    // Update the displayOrders function to add data attributes
-    function displayOrders(orders) {
-        ordersTableBody.innerHTML = '';
-
-        if (orders.length === 0) {
-            ordersTableBody.innerHTML = `
-        <tr>
-          <td colspan="6" class="text-center">No orders found</td>
-        </tr>
-      `;
-            return;
-        }
-
-        orders.forEach(order => {
-            const row = document.createElement('tr');
-            // Add data attributes for filtering
-            row.setAttribute('data-order-id', order.orderId);
-            row.setAttribute('data-user-id', order.userId);
-            row.setAttribute('data-status', order.status);
-
-            row.innerHTML = `
-        <td>${order.orderId}</td>
-        <td>${order.userId}</td>
-        <td>${formatDate(order.orderDate)}</td>
-        <td>${formatCurrency(order.totalAmount)}</td>
-        <td><span class="status-badge ${getStatusBadgeClass(order.status)}">${order.status}</span></td>
-        <td class="action-buttons">
-          <button class="btn btn-sm btn-info view-order" data-id="${order.orderId}">
-            <i class="fas fa-eye"></i>
-          </button>
-          <button class="btn btn-sm btn-warning edit-order" data-id="${order.orderId}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="btn btn-sm btn-danger delete-order" data-id="${order.orderId}">
-            <i class="fas fa-trash"></i>
-          </button>
-        </td>
-      `;
-            ordersTableBody.appendChild(row);
-        });
-
-        // Add event listeners to the buttons
-        document.querySelectorAll('.view-order').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const orderId = e.target.closest('.view-order').dataset.id;
-                viewOrder(orderId);
-            });
-        });
-
-        document.querySelectorAll('.edit-order').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const orderId = e.target.closest('.edit-order').dataset.id;
-                editOrder(orderId);
-            });
-        });
-
-        document.querySelectorAll('.delete-order').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const orderId = e.target.closest('.delete-order').dataset.id;
-                deleteOrder(orderId);
-            });
-        });
-    }
-
-    // Update the initApp function to include search event listeners
+    // Initialize the application
     function initApp() {
         // Load initial data
         loadOrders();
         loadOrderDetails();
+
+        // Populate user filter dropdown with generated IDs
+        const userFilter = document.getElementById('userFilter');
+        const userIds = generateUserIds();
+        userIds.forEach(userId => {
+            const option = document.createElement('option');
+            option.value = userId;
+            option.textContent = userId;
+            userFilter.appendChild(option);
+        });
 
         // Toggle instructions
         document.getElementById('toggleInstructions').addEventListener('click', function() {
             const instructions = document.getElementById('instructions');
             instructions.style.display = instructions.style.display === 'none' ? 'block' : 'none';
         });
+
 
         // Create order button click
         document.querySelector('[data-bs-target="#createOrderModal"]').addEventListener('click', openCreateOrderModal);
@@ -1531,6 +1615,9 @@
             filterOrders();
         });
     }
+
+    // Initialize the app when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', initApp);
 </script>
 </body>
 </html>

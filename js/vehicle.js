@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
 });
 
+// Update the setupEventListeners function to include the new button
 function setupEventListeners() {
     openFormBtn.addEventListener('click', openAddForm);
     closePopupBtn.addEventListener('click', closePopup);
@@ -41,6 +42,14 @@ function setupEventListeners() {
     printBtn.addEventListener('click', printTable);
     filterBtn.addEventListener('click', toggleFilterOptions);
     generateReportBtn.addEventListener('click', generateFullReport);
+
+    // Add event listener for generate vehicle ID button
+    document.getElementById('generateVehicleIdBtn').addEventListener('click', async () => {
+        if (editMode.value === 'false') {
+            const nextId = await generateNextVehicleId();
+            document.getElementById('vehicleCodeInput').value = nextId;
+        }
+    });
 
     // Close view popup
     document.querySelector('.close-view-popup').addEventListener('click', () => {
@@ -64,6 +73,61 @@ async function loadVehicles() {
         console.error('Error:', error);
     } finally {
         showLoading(false);
+    }
+}
+// Function to generate the next vehicle ID
+async function generateNextVehicleId() {
+    try {
+        const response = await fetch(`${API_BASE}/getAll`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const vehicles = await response.json();
+
+        // Find the highest vehicle code
+        let maxCode = 0;
+        vehicles.forEach(vehicle => {
+            if (vehicle.vehicleCode && vehicle.vehicleCode.startsWith('V')) {
+                const codeNum = parseInt(vehicle.vehicleCode.substring(1));
+                if (codeNum > maxCode) {
+                    maxCode = codeNum;
+                }
+            }
+        });
+
+        // Generate next code
+        const nextCode = `V${(maxCode + 1).toString().padStart(3, '0')}`;
+        return nextCode;
+    } catch (error) {
+        console.error('Error generating vehicle ID:', error);
+        // Fallback to a simple increment if API call fails
+        const currentCode = document.getElementById('vehicleCodeInput').value;
+        if (currentCode && currentCode.startsWith('V')) {
+            const codeNum = parseInt(currentCode.substring(1)) || 0;
+            return `V${(codeNum + 1).toString().padStart(3, '0')}`;
+        }
+        return 'V001';
+    }
+}
+
+// Function to populate staff IDs in dropdown
+async function populateStaffIds() {
+    try {
+        // In a real application, you would fetch this from an API
+        // For demo purposes, we'll generate some sample staff IDs
+        const staffIds = ['S001', 'S002', 'S003', 'S004', 'S005', 'S006', 'S007', 'S008', 'S009', 'S010'];
+
+        const staffIdSelect = document.getElementById('staffIdInput');
+        staffIdSelect.innerHTML = '<option value="">Select Staff ID</option>';
+
+        staffIds.forEach(staffId => {
+            const option = document.createElement('option');
+            option.value = staffId;
+            option.textContent = staffId;
+            staffIdSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error populating staff IDs:', error);
     }
 }
 
@@ -209,6 +273,14 @@ function renderVehicles(vehicles) {
         vehicleTableBody.appendChild(row);
     });
 
+    // Add event listener for the generate vehicle ID button
+    document.getElementById('generateVehicleIdBtn').addEventListener('click', async () => {
+        if (editMode.value === 'false') {
+            const nextId = await generateNextVehicleId();
+            document.getElementById('vehicleCodeInput').value = nextId;
+        }
+    });
+
     // Add event listeners to action buttons
     document.querySelectorAll('.view-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -242,13 +314,23 @@ function updateStats(vehicles) {
     maintenanceVehiclesEl.textContent = maintenanceCount;
 }
 
-function openAddForm() {
+// Modify the openAddForm function
+async function openAddForm() {
     editMode.value = 'false';
     popupTitle.textContent = 'Add New Vehicle';
     vehicleForm.reset();
+
+    // Generate and set the next vehicle ID
+    const nextId = await generateNextVehicleId();
+    document.getElementById('vehicleCodeInput').value = nextId;
+
+    // Populate staff IDs
+    await populateStaffIds();
+
     vehicleFormPopup.classList.add('active');
 }
 
+// Modify the openEditForm function
 async function openEditForm(vehicleCode) {
     try {
         const response = await fetch(`${API_BASE}/${vehicleCode}`);
@@ -267,6 +349,9 @@ async function openEditForm(vehicleCode) {
         document.getElementById('categoryInput').value = vehicle.vehicleCategory;
         document.getElementById('fuelTypeInput').value = vehicle.fuelType;
         document.getElementById('statusInput').value = vehicle.status;
+
+        // Populate staff IDs and set the current value
+        await populateStaffIds();
         document.getElementById('staffIdInput').value = vehicle.staffId;
 
         vehicleFormPopup.classList.add('active');

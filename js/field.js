@@ -1,3 +1,7 @@
+let currentPage = 1;
+let pageSize = 10;
+let totalPages = 1;
+let filteredFieldsData = [];
 
     const API_BASE_URL = 'http://localhost:8080/api/v1/field';
     let fieldsData = [];
@@ -18,8 +22,24 @@
     setupEventListeners();
 });
 
+// Add event listeners for pagination controls
+function setupPaginationListeners() {
+    document.getElementById('firstPageBtn').addEventListener('click', () => goToPage(1));
+    document.getElementById('prevPageBtn').addEventListener('click', () => goToPage(currentPage - 1));
+    document.getElementById('nextPageBtn').addEventListener('click', () => goToPage(currentPage + 1));
+    document.getElementById('lastPageBtn').addEventListener('click', () => goToPage(totalPages));
+
+    document.getElementById('pageSizeSelect').addEventListener('change', function() {
+        pageSize = parseInt(this.value);
+        currentPage = 1; // Reset to first page when changing page size
+        setupPagination();
+        renderFieldsTable();
+    });
+}
+
     // Set up event listeners
     function setupEventListeners() {
+    setupPaginationListeners();
     // Add field button
     document.getElementById('openFormBtn').addEventListener('click', openAddModal);
 
@@ -33,6 +53,8 @@
     document.getElementById('fieldForm').addEventListener('submit', function(e) {
     e.preventDefault();
     saveField();
+
+
 });
 
     // Close popup buttons
@@ -66,18 +88,105 @@
 }
 }
 
-    // Load fields data
-    async function loadFields() {
-    try {
-    const response = await fetch(API_BASE_URL);
-    if (!response.ok) throw new Error('Failed to fetch fields');
 
-    fieldsData = await response.json();
-    renderFieldsTable(fieldsData);
-} catch (error) {
-    console.error('Error loading fields:', error);
-    throw error;
+// Update the loadFields function to initialize pagination
+async function loadFields() {
+    try {
+        const response = await fetch(API_BASE_URL);
+        if (!response.ok) throw new Error('Failed to fetch fields');
+
+        fieldsData = await response.json();
+        filteredFieldsData = [...fieldsData];
+        setupPagination();
+        renderFieldsTable();
+    } catch (error) {
+        console.error('Error loading fields:', error);
+        throw error;
+    }
 }
+
+//  function to set up pagination
+function setupPagination() {
+    // Calculate total pages
+    totalPages = Math.ceil(filteredFieldsData.length / pageSize);
+
+    // Update pagination info
+    updatePaginationInfo();
+
+    // Render page numbers
+    renderPageNumbers();
+
+    // Update button states
+    updatePaginationButtons();
+}
+
+//  function to update pagination info
+function updatePaginationInfo() {
+    const start = (currentPage - 1) * pageSize + 1;
+    const end = Math.min(currentPage * pageSize, filteredFieldsData.length);
+    const total = filteredFieldsData.length;
+
+    document.getElementById('paginationInfo').textContent =
+        `Showing ${start} to ${end} of ${total} entries`;
+}
+
+//  function to render page numbers
+function renderPageNumbers() {
+    const pageNumbersContainer = document.getElementById('pageNumbers');
+    pageNumbersContainer.innerHTML = '';
+
+    // Always show first page
+    addPageNumber(1);
+
+    // Calculate range of pages to show
+    let startPage = Math.max(2, currentPage - 2);
+    let endPage = Math.min(totalPages - 1, currentPage + 2);
+
+    // Add ellipsis if needed
+    if (startPage > 2) {
+        pageNumbersContainer.innerHTML += '<span class="page-ellipsis">...</span>';
+    }
+
+    // Add page numbers in range
+    for (let i = startPage; i <= endPage; i++) {
+        addPageNumber(i);
+    }
+
+    // Add ellipsis if needed
+    if (endPage < totalPages - 1) {
+        pageNumbersContainer.innerHTML += '<span class="page-ellipsis">...</span>';
+    }
+
+    // Always show last page if there is more than one page
+    if (totalPages > 1) {
+        addPageNumber(totalPages);
+    }
+}
+
+// Helper function to add a page number button
+function addPageNumber(page) {
+    const pageNumber = document.createElement('button');
+    pageNumber.className = `page-number ${page === currentPage ? 'active' : ''}`;
+    pageNumber.textContent = page;
+    pageNumber.addEventListener('click', () => goToPage(page));
+    document.getElementById('pageNumbers').appendChild(pageNumber);
+}
+
+// Function to update pagination buttons
+function updatePaginationButtons() {
+    document.getElementById('firstPageBtn').disabled = currentPage === 1;
+    document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    document.getElementById('lastPageBtn').disabled = currentPage === totalPages;
+}
+
+// Function to go to a specific page
+function goToPage(page) {
+    if (page < 1 || page > totalPages || page === currentPage) return;
+
+    currentPage = page;
+    renderFieldsTable();
+    setupPagination();
 }
 
     // Load statistics
@@ -99,58 +208,121 @@
 }
 }
 
-    // Render fields table
-    function renderFieldsTable(fields) {
+// Update the renderFieldsTable function to use pagination
+function renderFieldsTable() {
     const tableBody = document.getElementById('fieldTableBody');
 
-    if (fields.length === 0) {
-    tableBody.innerHTML = `
-        <tr>
-          <td colspan="7" class="text-center text-muted py-4">
-            <i class="fas fa-inbox fa-3x mb-3"></i>
-            <p>No fields found. Add a new field to get started.</p>
-          </td>
-        </tr>
-      `;
-    return;
-}
+    if (filteredFieldsData.length === 0) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                    <p>No fields found. Add a new field to get started.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
 
-    tableBody.innerHTML = fields.map(field => `
-      <tr>
-        <td>${field.fieldCode}</td>
-        <td>${field.fieldName}</td>
-        <td>${field.fieldLocation}</td>
-        <td>${field.extent_size ? field.extent_size.toFixed(2) : '0.00'}</td>
-        <td>${field.logCode || 'N/A'}</td>
-        <td>
-          ${field.fieldImageOne ?
-    `<img src="data:image/jpeg;base64,${field.fieldImageOne}" class="img-thumbnail" alt="Field Image">` :
-    '<i class="fas fa-image text-muted"></i>'
-}
-          ${field.fieldImageTwo ?
-    `<img src="data:image/jpeg;base64,${field.fieldImageTwo}" class="img-thumbnail" alt="Field Image">` :
-    ''
-}
-        </td>
-        <td>
-          <div class="action-buttons">
-            <button class="action-btn view-btn" onclick="viewField('${field.fieldCode}')">
-              <i class="fas fa-eye"></i>
-            </button>
-            <button class="action-btn edit-btn" onclick="editField('${field.fieldCode}')">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button class="action-btn delete-btn" onclick="deleteField('${field.fieldCode}')">
-              <i class="fas fa-trash"></i>
-            </button>
-          </div>
-        </td>
-      </tr>
+    // Calculate start and end indices for current page
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = Math.min(startIndex + pageSize, filteredFieldsData.length);
+    const currentPageData = filteredFieldsData.slice(startIndex, endIndex);
+
+    tableBody.innerHTML = currentPageData.map(field => `
+        <tr>
+            <td>${field.fieldCode}</td>
+            <td>${field.fieldName}</td>
+            <td>${field.fieldLocation}</td>
+            <td>${field.extent_size ? field.extent_size.toFixed(2) : '0.00'}</td>
+            <td>${field.logCode || 'N/A'}</td>
+            <td>
+                ${field.fieldImageOne ?
+        `<img src="data:image/jpeg;base64,${field.fieldImageOne}" class="img-thumbnail" alt="Field Image">` :
+        '<i class="fas fa-image text-muted"></i>'
+    }
+                ${field.fieldImageTwo ?
+        `<img src="data:image/jpeg;base64,${field.fieldImageTwo}" class="img-thumbnail" alt="Field Image">` :
+        ''
+    }
+            </td>
+            <td>
+                <div class="action-buttons">
+                    <button class="action-btn view-btn" onclick="viewField('${field.fieldCode}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn edit-btn" onclick="editField('${field.fieldCode}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" onclick="deleteField('${field.fieldCode}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
     `).join('');
 }
 
-    // Open add modal
-    function openAddModal() {
+
+// Function to generate the next field ID
+async function generateNextFieldId() {
+    try {
+        const response = await fetch(API_BASE_URL);
+        if (!response.ok) throw new Error('Failed to fetch fields');
+
+        const fields = await response.json();
+
+        if (fields.length === 0) {
+            return "F001";
+        }
+
+        // Extract all field codes and find the highest number
+        const fieldCodes = fields.map(field => field.fieldCode);
+        const maxCode = fieldCodes.reduce((max, code) => {
+            if (code && code.startsWith('F')) {
+                const num = parseInt(code.substring(1));
+                return num > max ? num : max;
+            }
+            return max;
+        }, 0);
+
+        // Generate next ID
+        const nextNum = maxCode + 1;
+        return `F${nextNum.toString().padStart(3, '0')}`;
+    } catch (error) {
+        console.error('Error generating field ID:', error);
+        // Fallback to a random ID if there's an error
+        return `F${Math.floor(100 + Math.random() * 900)}`;
+    }
+}
+
+// Function to populate the log code dropdown
+async function populateLogCodes() {
+    try {
+
+        const logCodes = ['LOG001', 'LOG002', 'LOG003', 'LOG004', 'LOG005'];
+
+        const logCodeSelect = document.getElementById('logCodeInput');
+
+        // Clear existing options except the first one
+        while (logCodeSelect.options.length > 1) {
+            logCodeSelect.remove(1);
+        }
+
+        // Add log codes to dropdown
+        logCodes.forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = code;
+            logCodeSelect.appendChild(option);
+        });
+    } catch (error) {
+        console.error('Error populating log codes:', error);
+    }
+}
+
+// Update the openAddModal function
+async function openAddModal() {
     isEditMode = false;
     currentFieldCode = '';
     document.getElementById('popupTitle').textContent = 'Add New Field';
@@ -160,6 +332,13 @@
     document.getElementById('imagePreviewTwo').innerHTML = '<i class="fas fa-image text-muted"></i>';
     document.getElementById('fileNameOne').textContent = 'No file chosen';
     document.getElementById('fileNameTwo').textContent = 'No file chosen';
+
+    // Generate and set the next field ID
+    const nextId = await generateNextFieldId();
+    document.getElementById('fieldCodeInput').value = nextId;
+
+    // Populate log codes
+    await populateLogCodes();
 
     openModal('fieldFormPopup');
 }
@@ -221,42 +400,45 @@
 }
 }
 
-    // Edit field
-    async function editField(fieldCode) {
+// Edit field
+async function editField(fieldCode) {
     try {
-    const response = await fetch(`${API_BASE_URL}/${fieldCode}`);
-    if (!response.ok) throw new Error('Failed to fetch field for edit');
+        const response = await fetch(`${API_BASE_URL}/${fieldCode}`);
+        if (!response.ok) throw new Error('Failed to fetch field for edit');
 
-    const field = await response.json();
+        const field = await response.json();
 
-    isEditMode = true;
-    currentFieldCode = fieldCode;
-    document.getElementById('popupTitle').textContent = 'Edit Field';
-    document.getElementById('editMode').value = 'true';
-    document.getElementById('editFieldCode').value = fieldCode;
+        isEditMode = true;
+        currentFieldCode = fieldCode;
+        document.getElementById('popupTitle').textContent = 'Edit Field';
+        document.getElementById('editMode').value = 'true';
+        document.getElementById('editFieldCode').value = fieldCode;
 
-    document.getElementById('fieldCodeInput').value = field.fieldCode;
-    document.getElementById('fieldNameInput').value = field.fieldName;
-    document.getElementById('fieldLocationInput').value = field.fieldLocation;
-    document.getElementById('extentSizeInput').value = field.extent_size || '';
-    document.getElementById('logCodeInput').value = field.logCode || '';
+        document.getElementById('fieldCodeInput').value = field.fieldCode;
+        document.getElementById('fieldNameInput').value = field.fieldName;
+        document.getElementById('fieldLocationInput').value = field.fieldLocation;
+        document.getElementById('extentSizeInput').value = field.extent_size || '';
 
-    // Handle image previews
-    document.getElementById('imagePreviewOne').innerHTML = field.fieldImageOne ?
-    `<img src="data:image/jpeg;base64,${field.fieldImageOne}">` :
-    '<i class="fas fa-image text-muted"></i>';
+        // Populate log codes and set the selected value
+        await populateLogCodes();
+        document.getElementById('logCodeInput').value = field.logCode || '';
 
-    document.getElementById('imagePreviewTwo').innerHTML = field.fieldImageTwo ?
-    `<img src="data:image/jpeg;base64,${field.fieldImageTwo}">` :
-    '<i class="fas fa-image text-muted"></i>';
+        // Handle image previews
+        document.getElementById('imagePreviewOne').innerHTML = field.fieldImageOne ?
+            `<img src="data:image/jpeg;base64,${field.fieldImageOne}">` :
+            '<i class="fas fa-image text-muted"></i>';
 
-    document.getElementById('fileNameOne').textContent = field.fieldImageOne ? 'Image uploaded' : 'No file chosen';
-    document.getElementById('fileNameTwo').textContent = field.fieldImageTwo ? 'Image uploaded' : 'No file chosen';
+        document.getElementById('imagePreviewTwo').innerHTML = field.fieldImageTwo ?
+            `<img src="data:image/jpeg;base64,${field.fieldImageTwo}">` :
+            '<i class="fas fa-image text-muted"></i>';
 
-    openModal('fieldFormPopup');
-} catch (error) {
-    showError('Failed to load field for editing: ' + error.message);
-}
+        document.getElementById('fileNameOne').textContent = field.fieldImageOne ? 'Image uploaded' : 'No file chosen';
+        document.getElementById('fileNameTwo').textContent = field.fieldImageTwo ? 'Image uploaded' : 'No file chosen';
+
+        openModal('fieldFormPopup');
+    } catch (error) {
+        showError('Failed to load field for editing: ' + error.message);
+    }
 }
 
     // Save field (create or update)
@@ -339,23 +521,25 @@
 }
 }
 
-    // Filter fields
-    function filterFields() {
+// Filter fields
+function filterFields() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
     if (!searchTerm) {
-    renderFieldsTable(fieldsData);
-    return;
-}
+        filteredFieldsData = [...fieldsData];
+    } else {
+        filteredFieldsData = fieldsData.filter(field =>
+            field.fieldCode.toLowerCase().includes(searchTerm) ||
+            field.fieldName.toLowerCase().includes(searchTerm) ||
+            field.fieldLocation.toLowerCase().includes(searchTerm) ||
+            (field.logCode && field.logCode.toLowerCase().includes(searchTerm))
+        );
+    }
 
-    const filteredFields = fieldsData.filter(field =>
-    field.fieldCode.toLowerCase().includes(searchTerm) ||
-    field.fieldName.toLowerCase().includes(searchTerm) ||
-    field.fieldLocation.toLowerCase().includes(searchTerm) ||
-    (field.logCode && field.logCode.toLowerCase().includes(searchTerm))
-    );
-
-    renderFieldsTable(filteredFields);
+    // Reset to first page when filtering
+    currentPage = 1;
+    setupPagination();
+    renderFieldsTable();
 }
 
     // Image preview
@@ -498,7 +682,7 @@
 });
 }
 
-    // Add this function to generate all reports
+    // function to generate all reports
     function generateAllReports() {
     generateReport('area');
     generateReport('location');
@@ -507,7 +691,7 @@
     updateSummaryStats();
 }
 
-    // Add this function to generate specific report
+    //  function to generate specific report
     function generateReport(reportType) {
     switch (reportType) {
     case 'area':
@@ -539,7 +723,7 @@
     document.getElementById('summaryAvgSize').textContent = avgSize.toFixed(2);
 }
 
-    // Add this function to get filtered fields based on report filters
+    //  function to get filtered fields based on report filters
     function getFilteredFields() {
     const locationFilter = document.getElementById('locationFilter').value;
     const dateRange = document.getElementById('reportRange').value;
@@ -551,14 +735,11 @@
     filteredFields = filteredFields.filter(field => field.fieldLocation === locationFilter);
 }
 
-    // Note: Since we don't have date fields in the sample data,
-    // this would need to be implemented with actual date fields
-    // For now, we'll just return the location-filtered data
-
+    // Filter by date range
     return filteredFields;
 }
 
-    // Add this function to generate area report
+    //function to generate area report
     function generateAreaReport() {
     const filteredFields = getFilteredFields();
 

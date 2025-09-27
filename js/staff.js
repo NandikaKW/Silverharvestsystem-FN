@@ -1,3 +1,7 @@
+// Add these constants at the top of your script
+const STAFF_ID_PREFIX = 'S';
+const LOG_CODE_PREFIX = 'LOG';
+
 // Base API URL
 const API_BASE_URL = 'http://localhost:8080/api/v1/staff';
 
@@ -16,6 +20,7 @@ const editStaffId = document.getElementById('editStaffId');
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
+    populateLogCodeDropdown();
     loadStaffData();
     loadStats();
 
@@ -303,7 +308,7 @@ async function viewStaff(staffId) {
     }
 }
 
-// Open edit form
+// Modify the openEditForm function
 async function openEditForm(staffId) {
     try {
         const response = await fetch(`${API_BASE_URL}/${staffId}`);
@@ -326,7 +331,10 @@ async function openEditForm(staffId) {
         document.getElementById('contactNoInput').value = staff.contactNo || '';
         document.getElementById('emailInput').value = staff.email || '';
         document.getElementById('roleInput').value = staff.role || '';
-        document.getElementById('logCodeInput').value = staff.logCode || '';
+
+        // Populate log code dropdown and select the current value
+        await populateLogCodeDropdown();
+        document.getElementById('logCodeSelect').value = staff.logCode || '';
 
         // Show popup
         staffFormPopup.classList.add('active');
@@ -336,30 +344,144 @@ async function openEditForm(staffId) {
     }
 }
 
-// Open add form
+// Add this function to generate log code options
+async function populateLogCodeDropdown() {
+    try {
+        const response = await fetch(API_BASE_URL + '/all');
+        if (!response.ok) throw new Error('Failed to fetch staff data');
+
+        const staffList = await response.json();
+        const logCodeSelect = document.getElementById('logCodeSelect');
+
+        // Clear existing options except the first one
+        while (logCodeSelect.options.length > 1) {
+            logCodeSelect.remove(1);
+        }
+
+        // Extract all existing log codes and remove duplicates
+        const existingLogCodes = [...new Set(
+            staffList
+                .map(staff => staff.logCode)
+                .filter(code => code && code.startsWith('LOG'))
+        )].sort();
+
+        // Find the highest numeric part
+        let maxNumber = 0;
+        existingLogCodes.forEach(code => {
+            const numPart = parseInt(code.replace('LOG', ''));
+            if (!isNaN(numPart) && numPart > maxNumber) {
+                maxNumber = numPart;
+            }
+        });
+
+        // Generate options for existing log codes
+        existingLogCodes.forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = code;
+            logCodeSelect.appendChild(option);
+        });
+
+        // Generate the next log code option only if we're in add mode
+        if (document.getElementById('editMode').value === 'false') {
+            const nextNumber = maxNumber + 1;
+            const nextLogCode = `LOG${nextNumber.toString().padStart(3, '0')}`;
+
+            const newOption = document.createElement('option');
+            newOption.value = nextLogCode;
+            newOption.textContent = nextLogCode;
+            newOption.selected = true;
+            logCodeSelect.appendChild(newOption);
+        }
+
+    } catch (error) {
+        console.error('Error populating log codes:', error);
+        // Fallback: create basic options
+        const logCodeSelect = document.getElementById('logCodeSelect');
+        for (let i = 1; i <= 10; i++) {
+            const code = `LOG${i.toString().padStart(3, '0')}`;
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = code;
+            logCodeSelect.appendChild(option);
+        }
+    }
+}
+
+// Modify the openAddForm function
 function openAddForm() {
     document.getElementById('popupTitle').textContent = 'Add New Staff';
     document.getElementById('editMode').value = 'false';
     document.getElementById('staffForm').reset();
     staffFormPopup.classList.add('active');
 
-    // Generate a new staff ID if needed
+    // Generate staff ID and populate log code dropdown
     generateStaffId();
+    populateLogCodeDropdown();
 }
 
-// Generate staff ID
+
+// Modify the generateStaffId function
 async function generateStaffId() {
     try {
-        // This is a placeholder - you would need to implement an endpoint to get the last ID
-        // For now, we'll generate a random ID for demonstration
-        const randomId = 'S' + Math.floor(1000 + Math.random() * 9000);
-        document.getElementById('staffIdInput').value = randomId;
+        const response = await fetch(API_BASE_URL + '/all');
+        if (!response.ok) throw new Error('Failed to fetch staff data');
+
+        const staffList = await response.json();
+
+        // Extract all existing staff IDs
+        const existingIds = staffList.map(staff => staff.staffId).filter(id => id && id.startsWith(STAFF_ID_PREFIX));
+
+        // Find the highest numeric part
+        let maxNumber = 0;
+        existingIds.forEach(id => {
+            const numPart = parseInt(id.replace(STAFF_ID_PREFIX, ''));
+            if (!isNaN(numPart) && numPart > maxNumber) {
+                maxNumber = numPart;
+            }
+        });
+
+        // Generate the next ID
+        const nextNumber = maxNumber + 1;
+        const nextId = `${STAFF_ID_PREFIX}${nextNumber.toString().padStart(3, '0')}`;
+
+        document.getElementById('staffIdInput').value = nextId;
     } catch (error) {
         console.error('Error generating staff ID:', error);
         // Fallback: let the user enter their own ID
     }
 }
+// Add this function to generate log codes
+async function populateLogCodes() {
+    try {
+        const response = await fetch(API_BASE_URL + '/all');
+        if (!response.ok) throw new Error('Failed to fetch staff data');
 
+        const staffList = await response.json();
+
+        // Extract all existing log codes
+        const existingLogCodes = staffList.map(staff => staff.logCode)
+            .filter(code => code && code.startsWith(LOG_CODE_PREFIX));
+
+        // Find the highest numeric part
+        let maxNumber = 0;
+        existingLogCodes.forEach(code => {
+            const numPart = parseInt(code.replace(LOG_CODE_PREFIX, ''));
+            if (!isNaN(numPart) && numPart > maxNumber) {
+                maxNumber = numPart;
+            }
+        });
+
+        // Generate the next log code
+        const nextNumber = maxNumber + 1;
+        const nextLogCode = `${LOG_CODE_PREFIX}${nextNumber.toString().padStart(3, '0')}`;
+
+        // Set the value in the form
+        document.getElementById('logCodeInput').value = nextLogCode;
+    } catch (error) {
+        console.error('Error generating log code:', error);
+    }
+}
 // Delete staff
 async function deleteStaff(staffId) {
     try {

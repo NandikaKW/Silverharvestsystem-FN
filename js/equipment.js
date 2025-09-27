@@ -1,3 +1,10 @@
+// Variables
+let currentPage = 1;
+let itemsPerPage = 10;
+let totalPages = 1;
+let filteredData = [];
+let staffIds = [];
+let fieldCodes = [];
 $(document).ready(function() {
     // API Base URL
     const API_BASE_URL = 'http://localhost:8080/api/v1/equipment';
@@ -12,8 +19,34 @@ $(document).ready(function() {
 
     // Set up all event listeners
     function setupEventListeners() {
+
+        // Add these event listeners to your setupEventListeners function
+        $('#firstPageBtn').on('click', function() {
+            goToPage(1);
+        });
+
+        $('#prevPageBtn').on('click', function() {
+            goToPage(currentPage - 1);
+        });
+
+        $('#nextPageBtn').on('click', function() {
+            goToPage(currentPage + 1);
+        });
+
+        $('#lastPageBtn').on('click', function() {
+            goToPage(totalPages);
+        });
+
+        $('#pageSizeSelect').on('change', function() {
+            itemsPerPage = parseInt($(this).val());
+            currentPage = 1; // Reset to first page when changing page size
+            updatePagination();
+            renderEquipmentTable(getCurrentPageData());
+        });
+
         // Open form popup
         $('#openFormBtn').on('click', function() {
+            populateDropdowns();
             openEquipmentForm();
         });
 
@@ -59,7 +92,7 @@ $(document).ready(function() {
         });
     }
 
-    // Load equipment data from backend
+    // Update the loadEquipmentData function to initialize pagination
     function loadEquipmentData() {
         showLoading(true);
 
@@ -69,8 +102,10 @@ $(document).ready(function() {
             dataType: 'json',
             success: function(data) {
                 equipmentData = data;
-                renderEquipmentTable(equipmentData);
+                filteredData = [...equipmentData]; // Initialize filteredData
                 updateStats(equipmentData);
+                updatePagination();
+                renderEquipmentTable(getCurrentPageData());
                 showLoading(false);
             },
             error: function(xhr, status, error) {
@@ -167,12 +202,74 @@ $(document).ready(function() {
         $('#maintenanceEquipment').text(maintenance);
     }
 
-    // Open equipment form (add mode)
+    // Add this function to generate the next equipment ID
+    function generateNextEquipmentId() {
+        if (equipmentData.length === 0) {
+            return "E001";
+        }
+
+        // Extract all numeric parts of equipment IDs
+        const idNumbers = equipmentData
+            .filter(equipment => equipment.equipmentId && equipment.equipmentId.startsWith('E'))
+            .map(equipment => {
+                const numPart = equipment.equipmentId.substring(1);
+                return parseInt(numPart, 10);
+            })
+            .filter(num => !isNaN(num))
+            .sort((a, b) => a - b);
+
+        // Find the highest number and increment
+        const nextNumber = idNumbers.length > 0 ? Math.max(...idNumbers) + 1 : 1;
+
+        // Format with leading zeros
+        return `E${nextNumber.toString().padStart(3, '0')}`;
+    }
+
+// Add this function to populate dropdowns
+    function populateDropdowns() {
+        // Generate staff IDs if not already populated
+        if (staffIds.length === 0) {
+            staffIds = Array.from({length: 20}, (_, i) => `S${(i + 1).toString().padStart(3, '0')}`);
+        }
+
+        // Generate field codes if not already populated
+        if (fieldCodes.length === 0) {
+            fieldCodes = Array.from({length: 15}, (_, i) => `F${(i + 1).toString().padStart(3, '0')}`);
+        }
+
+        // Populate Staff ID dropdown
+        const $staffDropdown = $('#staffIdInput');
+        $staffDropdown.empty();
+        $staffDropdown.append('<option value="">Select Staff ID</option>');
+        staffIds.forEach(id => {
+            $staffDropdown.append(`<option value="${id}">${id}</option>`);
+        });
+
+        // Populate Field Code dropdown
+        const $fieldDropdown = $('#fieldCodeInput');
+        $fieldDropdown.empty();
+        $fieldDropdown.append('<option value="">Select Field Code</option>');
+        fieldCodes.forEach(code => {
+            $fieldDropdown.append(`<option value="${code}">${code}</option>`);
+        });
+    }
+
+// Update the openEquipmentForm function
     function openEquipmentForm() {
         $('#popupTitle').text('Add New Equipment');
         $('#editMode').val('false');
         $('#editEquipmentId').val('');
-        $('#equipmentForm')[0].reset();
+
+        // Generate and set the next equipment ID
+        $('#equipmentIdInput').val(generateNextEquipmentId());
+
+        // Reset other form fields but keep dropdowns populated
+        $('#nameInput').val('');
+        $('#typeInput').val('');
+        $('#statusInput').val('');
+        $('#staffIdInput').val('');
+        $('#fieldCodeInput').val('');
+
         $('#equipmentFormPopup').addClass('active');
     }
 
@@ -263,7 +360,7 @@ $(document).ready(function() {
         });
     }
 
-    // Edit equipment
+    // Update the editEquipment function
     function editEquipment(id) {
         showLoading(true);
 
@@ -271,6 +368,9 @@ $(document).ready(function() {
             url: `${API_BASE_URL}/${id}`,
             type: 'GET',
             success: function(equipment) {
+                // Populate dropdowns before filling the form
+                populateDropdowns();
+
                 $('#popupTitle').text('Edit Equipment');
                 $('#editMode').val('true');
                 $('#editEquipmentId').val(equipment.equipmentId);
@@ -325,27 +425,100 @@ $(document).ready(function() {
         });
     }
 
-    // Filter equipment based on search input
+    // Update the filterEquipment function to work with pagination
     function filterEquipment(searchTerm) {
         if (!searchTerm) {
-            renderEquipmentTable(equipmentData);
-            return;
+            filteredData = [...equipmentData];
+        } else {
+            filteredData = equipmentData.filter(equipment => {
+                return (
+                    (equipment.equipmentId && equipment.equipmentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (equipment.name && equipment.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (equipment.type && equipment.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (equipment.status && equipment.status.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (equipment.staffId && equipment.staffId.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (equipment.fieldCode && equipment.fieldCode.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+            });
         }
 
-        const filteredData = equipmentData.filter(equipment => {
-            return (
-                (equipment.equipmentId && equipment.equipmentId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (equipment.name && equipment.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (equipment.type && equipment.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (equipment.status && equipment.status.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (equipment.staffId && equipment.staffId.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                (equipment.fieldCode && equipment.fieldCode.toLowerCase().includes(searchTerm.toLowerCase()))
-            );
-        });
-
-        renderEquipmentTable(filteredData);
+        currentPage = 1; // Reset to first page when filtering
+        updatePagination();
+        renderEquipmentTable(getCurrentPageData());
+    }
+// Add these pagination helper functions
+    function getCurrentPageData() {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        return filteredData.slice(startIndex, endIndex);
     }
 
+    function updatePagination() {
+        totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+        // Update pagination info
+        const startItem = filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+        const endItem = Math.min(currentPage * itemsPerPage, filteredData.length);
+        $('#currentItems').text(`${startItem}-${endItem}`);
+        $('#totalItems').text(filteredData.length);
+
+        // Update button states
+        $('#firstPageBtn, #prevPageBtn').prop('disabled', currentPage === 1);
+        $('#nextPageBtn, #lastPageBtn').prop('disabled', currentPage === totalPages || totalPages === 0);
+
+        // Generate page number buttons
+        const $pageNumbers = $('#pageNumbers');
+        $pageNumbers.empty();
+
+        // Always show first page
+        addPageButton(1, $pageNumbers);
+
+        // Calculate range of pages to show
+        let startPage = Math.max(2, currentPage - 1);
+        let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+        // Add ellipsis if needed
+        if (startPage > 2) {
+            $pageNumbers.append('<span class="page-ellipsis">...</span>');
+        }
+
+        // Add middle pages
+        for (let i = startPage; i <= endPage; i++) {
+            addPageButton(i, $pageNumbers);
+        }
+
+        // Add ellipsis if needed
+        if (endPage < totalPages - 1) {
+            $pageNumbers.append('<span class="page-ellipsis">...</span>');
+        }
+
+        // Always show last page if there is more than one page
+        if (totalPages > 1) {
+            addPageButton(totalPages, $pageNumbers);
+        }
+    }
+
+    function addPageButton(pageNumber, $container) {
+        const isActive = pageNumber === currentPage;
+        const button = $(`<button class="page-btn ${isActive ? 'active' : ''}">${pageNumber}</button>`);
+
+        button.on('click', function() {
+            goToPage(pageNumber);
+        });
+
+        $container.append(button);
+    }
+
+    function goToPage(page) {
+        if (page < 1 || page > totalPages) return;
+
+        currentPage = page;
+        updatePagination();
+        renderEquipmentTable(getCurrentPageData());
+
+        // Scroll to top of table
+        $('.table-responsive').animate({ scrollTop: 0 }, 300);
+    }
     // Export equipment data
     function exportEquipmentData() {
         // Convert data to CSV

@@ -1,18 +1,14 @@
-
 :root {
     /* ===== Colors ===== */
     --primary-color: #88B44E;
-    --primary-light: #9FCC6B; /* lighter shade of primary */
-    --primary-dark: #6E923E;  /* darker shade of primary */
-
-    --secondary-color: #4E88B4; /* complementary tone */
-    --secondary-light: #6BA0CC; /* lighter shade of secondary */
-    --secondary-dark: #3E6C92;  /* darker shade of secondary */
-
+    --primary-light: #9FCC6B;
+    --primary-dark: #6E923E;
+    --secondary-color: #4E88B4;
+    --secondary-light: #6BA0CC;
+    --secondary-dark: #3E6C92;
     --accent-color: #e67e22;
-    --accent-light: #f39c12;   /* lighter shade of accent */
-    --accent-dark: #d35400;    /* darker shade of accent */
-
+    --accent-light: #f39c12;
+    --accent-dark: #d35400;
     --text-color: #333;
     --light-text: #707070;
     --bg-color: #f5f9f7;
@@ -36,12 +32,23 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
+    min-height: 100vh;
 }
 
 .container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 1.5rem;
+}
+
+/* Dashboard Section */
+.dashboard {
+    position: relative;
+    left: 250px;
+    background-color: var(--bg-color);
+    width: calc(100% - 250px);
+    transition: all 0.5s ease;
+    min-height: 100vh;
 }
 
 /* Header Styles */
@@ -135,18 +142,18 @@ body {
 /* Stats Cards */
 .stats-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1.8rem;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
     margin-bottom: 2rem;
 }
 
 .stat-card {
     background: var(--card-bg);
     border-radius: 15px;
-    padding: 1.8rem;
+    padding: 1.5rem;
     display: flex;
     align-items: center;
-    gap: 1.2rem;
+    gap: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     border: 1px solid var(--border-color);
@@ -167,6 +174,7 @@ body {
     color: white;
     font-size: 1.5rem;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+    flex-shrink: 0;
 }
 
 .stat-info h4 {
@@ -186,7 +194,7 @@ body {
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    gap: 1.8rem;
+    gap: 1.5rem;
 }
 
 /* Chart Section */
@@ -203,7 +211,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -236,7 +244,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.5rem;
 }
 
 .actions-header h3 {
@@ -257,7 +265,7 @@ body {
 .action-item {
     display: flex;
     align-items: center;
-    padding: 1.2rem;
+    padding: 1rem;
     border-radius: 12px;
     background: #f8f9fa;
     transition: all 0.3s ease;
@@ -281,6 +289,7 @@ body {
     color: white;
     font-size: 1.2rem;
     margin-right: 1rem;
+    flex-shrink: 0;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
 }
 
@@ -309,7 +318,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.5rem;
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -326,7 +335,7 @@ body {
 .activity-list {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 1rem;
 }
 
 .activity-item {
@@ -386,7 +395,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1.8rem;
+    margin-bottom: 1.5rem;
 }
 
 .status-header h3 {
@@ -401,7 +410,7 @@ body {
 .status-list {
     display: flex;
     flex-direction: column;
-    gap: 1.2rem;
+    gap: 1rem;
 }
 
 .status-item {
@@ -428,6 +437,7 @@ body {
     justify-content: center;
     color: white;
     font-size: 1rem;
+    flex-shrink: 0;
     background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
 }
 
@@ -542,149 +552,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* Responsive */
-@media (max-width: 1200px) {
-    .dashboard-grid {
-        gap: 1.5rem;
-    }
-
-    .chart-section {
-        grid-column: span 7;
-    }
-
-    .quick-actions {
-        grid-column: span 5;
-    }
-
-    .recent-activity,
-    .system-status {
-        grid-column: span 6;
-    }
-}
-
-@media (max-width: 992px) {
-    .dashboard-grid {
-        grid-template-columns: 1fr;
-        gap: 1.5rem;
-    }
-
-    .chart-section,
-    .quick-actions,
-    .recent-activity,
-    .system-status,
-    .weather-widget {
-        grid-column: 1 / -1;
-    }
-
-    .stats-container {
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    }
-
-    .dashboard-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1.5rem;
-    }
-
-    .header-actions {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-
-    .dashboard-header {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.5rem;
-    }
-
-    .dashboard-header h1 {
-        font-size: 1.8rem;
-        justify-content: center;
-        width: 100%;
-    }
-
-    .header-actions {
-        flex-direction: column;
-        align-items: center;
-        width: 100%;
-    }
-
-    .header-actions a {
-        width: 100%;
-        justify-content: center;
-        margin-bottom: 0.5rem;
-    }
-
-    .stats-container {
-        grid-template-columns: 1fr;
-    }
-
-    .chart-header,
-    .activity-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .weather-details {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 576px) {
-    .stat-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1.5rem;
-    }
-
-    .stat-info p {
-        font-size: 1.5rem;
-    }
-
-    .action-item {
-        flex-direction: column;
-        text-align: center;
-        padding: 1rem;
-    }
-
-    .action-icon {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-    }
-
-    .activity-item,
-    .status-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 0.5rem;
-    }
-
-    .activity-icon,
-    .status-icon {
-        margin-right: 0;
-        align-self: center;
-    }
-
-    .status-info {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .weather-temp {
-        font-size: 2.5rem;
-    }
-
-    .weather-icon {
-        font-size: 3rem;
-    }
-}
-
 /* Animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(20px); }
@@ -712,4 +579,214 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #a8a8a8;
+}
+
+/* Responsive Design */
+@media (max-width: 1400px) {
+    .dashboard-grid {
+        gap: 1.2rem;
+    }
+
+    .chart-section {
+        grid-column: span 7;
+    }
+
+    .quick-actions {
+        grid-column: span 5;
+    }
+}
+
+@media (max-width: 1200px) {
+    .dashboard {
+        left: 78px;
+        width: calc(100% - 78px);
+        z-index: 100;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: repeat(6, 1fr);
+    }
+
+    .chart-section {
+        grid-column: span 6;
+    }
+
+    .quick-actions {
+        grid-column: span 6;
+    }
+
+    .recent-activity,
+    .system-status {
+        grid-column: span 3;
+    }
+
+    .weather-widget {
+        grid-column: span 6;
+    }
+}
+
+@media (max-width: 992px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-section,
+    .quick-actions,
+    .recent-activity,
+    .system-status,
+    .weather-widget {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        left: 0;
+        width: 100%;
+    }
+
+    .container {
+        padding: 1rem;
+    }
+
+    .dashboard-header {
+        padding: 1.2rem;
+        text-align: center;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .header-actions {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .header-actions a {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .stats-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .stat-card {
+        padding: 1.2rem;
+    }
+
+    .chart-header,
+    .activity-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .weather-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 576px) {
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .stat-info p {
+        font-size: 1.5rem;
+    }
+
+    .action-item {
+        flex-direction: column;
+        text-align: center;
+        padding: 0.8rem;
+    }
+
+    .action-icon {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .activity-item,
+    .status-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+        padding: 0.8rem;
+    }
+
+    .activity-icon,
+    .status-icon {
+        margin-right: 0;
+        align-self: center;
+    }
+
+    .status-info {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .weather-temp {
+        font-size: 2.5rem;
+    }
+
+    .weather-icon {
+        font-size: 3rem;
+    }
+
+    .weather-details {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 400px) {
+    .dashboard-header h1 {
+        font-size: 1.3rem;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+
+    .stat-info h4 {
+        font-size: 0.85rem;
+    }
+
+    .stat-info p {
+        font-size: 1.3rem;
+    }
 }

@@ -1,3 +1,11 @@
+
+let currentPage = 1;
+let itemsPerPage = 10;
+let totalPages = 1;
+let allCrops = [];
+let allFieldCodes = [];
+let allLogCodes = [];
+
 // SweetAlert configuration
 const Toast = Swal.mixin({
     toast: true,
@@ -55,9 +63,55 @@ $(document).ready(function() {
         }
     });
 
-    // Open form popup for adding new crop
+    $('#pageSizeSelect').on('change', function() {
+        itemsPerPage = parseInt($(this).val());
+        currentPage = 1;
+        renderTableWithPagination();
+    });
+
+    $('#firstPageBtn').on('click', function() {
+        if (currentPage > 1) {
+            currentPage = 1;
+            renderTableWithPagination();
+        }
+    });
+
+    $('#prevPageBtn').on('click', function() {
+        if (currentPage > 1) {
+            currentPage--;
+            renderTableWithPagination();
+        }
+    });
+
+    $('#nextPageBtn').on('click', function() {
+        if (currentPage < totalPages) {
+            currentPage++;
+            renderTableWithPagination();
+        }
+    });
+
+    $('#lastPageBtn').on('click', function() {
+        if (currentPage < totalPages) {
+            currentPage = totalPages;
+            renderTableWithPagination();
+        }
+    });
+
+    //generate crop code button
+    $('#generateCropCodeBtn').on('click', function() {
+        const nextCode = generateNextCropCode();
+        $('#cropCodeInput').val(nextCode);
+    });
+
+
+    // opens the form to auto-generate a code
     $openFormBtn.on('click', () => {
         resetForm();
+
+        // Auto-generate crop code when opening the form
+        const nextCode = generateNextCropCode();
+        $('#cropCodeInput').val(nextCode);
+
         $popupTitle.text('Add New Crop');
         $editMode.val('false');
         $cropImageInput.prop('required', true);
@@ -158,7 +212,67 @@ $(document).ready(function() {
         });
     });
 
-    // Load all crops from backend
+    //  generate the next crop code
+    function generateNextCropCode() {
+        if (allCrops.length === 0) {
+            return "C001";
+        }
+
+        // Extract all crop codes and find the highest number
+        const cropCodes = allCrops.map(crop => crop.cropCode);
+        const maxCode = cropCodes.reduce((max, code) => {
+            if (code && code.startsWith('C')) {
+                const num = parseInt(code.substring(1));
+                return num > max ? num : max;
+            }
+            return max;
+        }, 0);
+
+        // Generate next code
+        const nextNum = maxCode + 1;
+        return `C${nextNum.toString().padStart(3, '0')}`;
+    }
+
+//  function to generate field codes
+    function generateFieldCodes() {
+        const fieldCodes = [];
+        for (let i = 1; i <= 20; i++) {
+            fieldCodes.push(`F${i.toString().padStart(3, '0')}`);
+        }
+        return fieldCodes;
+    }
+
+//  function to generate log codes
+    function generateLogCodes() {
+        const logCodes = [];
+        for (let i = 1; i <= 20; i++) {
+            logCodes.push(`LOG${i.toString().padStart(3, '0')}`);
+        }
+        return logCodes;
+    }
+
+// function to populate dropdowns
+    function populateDropdowns() {
+        // Populate field code dropdown
+        const $fieldCodeInput = $('#fieldCodeInput');
+        $fieldCodeInput.empty();
+        $fieldCodeInput.append('<option value="">Select Field Code</option>');
+
+        allFieldCodes.forEach(code => {
+            $fieldCodeInput.append(`<option value="${code}">${code}</option>`);
+        });
+
+        // Populate log code dropdown
+        const $logCodeInput = $('#logCodeInput');
+        $logCodeInput.empty();
+        $logCodeInput.append('<option value="">Select Log Code</option>');
+
+        allLogCodes.forEach(code => {
+            $logCodeInput.append(`<option value="${code}">${code}</option>`);
+        });
+    }
+
+// function to load all crops
     function loadAllCrops() {
         $loadingSpinner.show();
         $cropTableBody.empty();
@@ -167,22 +281,35 @@ $(document).ready(function() {
             url: `${API_BASE}/all`,
             method: 'GET',
             success: function(data) {
-                populateCropTable(data);
+                allCrops = data; // Store all crops for pagination
+
+                // Generate field and log codes if not already done
+                if (allFieldCodes.length === 0) {
+                    allFieldCodes = generateFieldCodes();
+                }
+                if (allLogCodes.length === 0) {
+                    allLogCodes = generateLogCodes();
+                }
+
+                // Populate dropdowns
+                populateDropdowns();
+
                 updateStats(data);
+                renderTableWithPagination(); // Render with pagination
             },
             error: function(xhr, status, error) {
                 console.error('Error:', error);
                 $cropTableBody.html(`
-                    <tr>
-                        <td colspan="9" style="text-align: center; padding: 2rem; color: var(--light-text);">
-                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
-                            <p>Failed to load crops. Please check your connection and try again.</p>
-                            <button class="btn-secondary" onclick="loadAllCrops()">
-                                <i class="fas fa-sync-alt"></i> Retry
-                            </button>
-                        </td>
-                    </tr>
-                `);
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 2rem; color: var(--light-text);">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                        <p>Failed to load crops. Please check your connection and try again.</p>
+                        <button class="btn-secondary" onclick="loadAllCrops()">
+                            <i class="fas fa-sync-alt"></i> Retry
+                        </button>
+                    </td>
+                </tr>
+            `);
             },
             complete: function() {
                 $loadingSpinner.hide();
@@ -190,6 +317,80 @@ $(document).ready(function() {
         });
     }
 
+// function to render table with pagination
+    function renderTableWithPagination() {
+        if (allCrops.length === 0) {
+            $cropTableBody.html(`
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 2rem; color: var(--light-text);">
+                    <i class="fas fa-seedling" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>No crops found. Add your first crop to get started.</p>
+                </td>
+            </tr>
+        `);
+            updatePaginationInfo(0, 0);
+            renderPaginationControls(0);
+            return;
+        }
+
+        // Calculate pagination values
+        const totalItems = allCrops.length;
+        totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Ensure current page is within valid range
+        if (currentPage > totalPages) currentPage = totalPages;
+        if (currentPage < 1) currentPage = 1;
+
+        // Get crops for current page
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+        const currentCrops = allCrops.slice(startIndex, endIndex);
+
+        // Populate table with current page crops
+        populateCropTable(currentCrops);
+
+        // Update pagination info and controls
+        updatePaginationInfo(startIndex + 1, endIndex, totalItems);
+        renderPaginationControls(totalPages);
+    }
+
+// function to update pagination info
+    function updatePaginationInfo(start, end, total) {
+        $('#currentItems').text(`${start}-${end}`);
+        $('#totalItems').text(total);
+    }
+
+// Function to render pagination controls
+    function renderPaginationControls(totalPages) {
+        const $paginationPages = $('#paginationPages');
+        $paginationPages.empty();
+
+        // Determine which page numbers to show
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+
+        // Adjust if we're near the end
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        // Add page number buttons
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = $(`<div class="page-number">${i}</div>`);
+            if (i === currentPage) {
+                pageBtn.addClass('active');
+            }
+            pageBtn.on('click', () => {
+                currentPage = i;
+                renderTableWithPagination();
+            });
+            $paginationPages.append(pageBtn);
+        }
+
+        // Enable/disable navigation buttons
+        $('#firstPageBtn, #prevPageBtn').prop('disabled', currentPage === 1);
+        $('#nextPageBtn, #lastPageBtn').prop('disabled', currentPage === totalPages);
+    }
     // Update statistics cards
     function updateStats(crops) {
         $totalCropsEl.text(crops.length);
@@ -224,58 +425,58 @@ $(document).ready(function() {
         }
     }
 
-    // Populate the crop table with data
+    // Update the populateCropTable function to not reset allCrops
     function populateCropTable(crops) {
         $cropTableBody.empty();
 
         if (crops.length === 0) {
             $cropTableBody.html(`
-                <tr>
-                    <td colspan="9" style="text-align: center; padding: 2rem; color: var(--light-text);">
-                        <i class="fas fa-seedling" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
-                        <p>No crops found. Add your first crop to get started.</p>
-                    </td>
-                </tr>
-            `);
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 2rem; color: var(--light-text);">
+                    <i class="fas fa-seedling" style="font-size: 2rem; margin-bottom: 1rem; display: block;"></i>
+                    <p>No crops found matching your search.</p>
+                </td>
+            </tr>
+        `);
             return;
         }
 
         $.each(crops, function(index, crop) {
             const row = `
-                <tr>
-                    <td>${crop.cropCode}</td>
-                    <td>${crop.commonName}</td>
-                    <td>${crop.scientificName}</td>
-                    <td>${crop.category}</td>
-                    <td>${crop.cropSeason}</td>
-                    <td>${crop.fieldCode}</td>
-                    <td>${crop.logCode}</td>
-                    <td>
-                        ${crop.cropImage ?
+            <tr>
+                <td>${crop.cropCode}</td>
+                <td>${crop.commonName}</td>
+                <td>${crop.scientificName}</td>
+                <td>${crop.category}</td>
+                <td>${crop.cropSeason}</td>
+                <td>${crop.fieldCode}</td>
+                <td>${crop.logCode}</td>
+                <td>
+                    ${crop.cropImage ?
                 `<img src="data:image/png;base64,${crop.cropImage}" class="img-thumbnail" alt="${crop.commonName}">` :
                 'No Image'}
-                    </td>
-                    <td class="action-buttons">
-                        <button class="action-btn view-btn" data-id="${crop.cropCode}">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="action-btn edit-btn" data-id="${crop.cropCode}">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="action-btn delete-btn" data-id="${crop.cropCode}">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        <button class="action-btn report-btn" data-id="${crop.cropCode}">
-                            <i class="fas fa-chart-bar"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+                </td>
+                <td class="action-buttons">
+                    <button class="action-btn view-btn" data-id="${crop.cropCode}">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="action-btn edit-btn" data-id="${crop.cropCode}">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="action-btn delete-btn" data-id="${crop.cropCode}">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="action-btn report-btn" data-id="${crop.cropCode}">
+                        <i class="fas fa-chart-bar"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
 
             $cropTableBody.append(row);
         });
 
-        // Add event listeners to action buttons
+        // Event listeners
         $('.view-btn').on('click', function() {
             const cropCode = $(this).data('id');
             viewCrop(cropCode);
@@ -349,7 +550,6 @@ $(document).ready(function() {
             }
         });
     }
-
     // Edit crop
     function editCrop(cropCode) {
         $.ajax({
@@ -418,33 +618,250 @@ $(document).ready(function() {
     window.generateFieldReport = generateFieldReport;
     window.generateCropReport = generateCropReport;
 
-    // Generate crop-specific report
+
+
+// Generate growth chart SVG based on crop type and season
+    function generateGrowthChart(category, season) {
+        // Different growth patterns based on category
+        const growthPatterns = {
+            Cereal: [10, 30, 60, 85, 95, 100],
+            Vegetable: [15, 40, 70, 90, 100],
+            Fruit: [5, 20, 45, 75, 90, 100],
+            Legume: [20, 50, 80, 100],
+            Other: [10, 35, 65, 85, 100]
+        };
+
+        const pattern = growthPatterns[category] || growthPatterns.Other;
+        const months = season === 'Winter' ?
+            ['Dec', 'Jan', 'Feb', 'Mar'] :
+            season === 'Spring' ?
+                ['Mar', 'Apr', 'May', 'Jun'] :
+                season === 'Summer' ?
+                    ['Jun', 'Jul', 'Aug', 'Sep'] :
+                    ['Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Create SVG chart
+        return `
+        <div style="width: 100%; height: 150px; position: relative;">
+            <svg width="100%" height="100%" viewBox="0 0 400 150">
+                <!-- Grid lines -->
+                <line x1="40" y1="20" x2="40" y2="130" stroke="#dee2e6" stroke-width="1" />
+                <line x1="40" y1="130" x2="380" y2="130" stroke="#dee2e6" stroke-width="1" />
+                
+                <!-- Y-axis labels -->
+                <text x="25" y="25" font-size="10" fill="#6c757d">100%</text>
+                <text x="25" y="75" font-size="10" fill="#6c757d">50%</text>
+                <text x="25" y="125" font-size="10" fill="#6c757d">0%</text>
+                
+                <!-- Growth line -->
+                <polyline points="${pattern.map((p, i) => {
+            const x = 40 + (i * (340 / (pattern.length - 1)));
+            const y = 130 - (p * 110 / 100);
+            return `${x},${y}`;
+        }).join(' ')}" 
+                fill="none" stroke="#88B44E" stroke-width="3" />
+                
+                <!-- Data points -->
+                ${pattern.map((p, i) => {
+            const x = 40 + (i * (340 / (pattern.length - 1)));
+            const y = 130 - (p * 110 / 100);
+            return `<circle cx="${x}" cy="${y}" r="4" fill="#88B44E" />`;
+        }).join('')}
+                
+                <!-- X-axis labels -->
+                ${months.map((month, i) => {
+            const x = 40 + (i * (340 / (months.length - 1)));
+            return `<text x="${x}" y="145" font-size="10" fill="#6c757d" text-anchor="middle">${month}</text>`;
+        }).join('')}
+            </svg>
+        </div>
+    `;
+    }
+
+// Generate health indicators with icons
+    function generateHealthIndicators(category) {
+        const indicators = {
+            Cereal: [
+                { name: 'Soil Moisture', value: 72, icon: 'tint', color: '#17a2b8' },
+                { name: 'Nutrient Level', value: 85, icon: 'flask', color: '#28a745' },
+                { name: 'Pest Risk', value: 25, icon: 'bug', color: '#dc3545' }
+            ],
+            Vegetable: [
+                { name: 'Soil Moisture', value: 68, icon: 'tint', color: '#17a2b8' },
+                { name: 'Nutrient Level', value: 78, icon: 'flask', color: '#28a745' },
+                { name: 'Pest Risk', value: 40, icon: 'bug', color: '#dc3545' }
+            ],
+            Fruit: [
+                { name: 'Soil Moisture', value: 65, icon: 'tint', color: '#17a2b8' },
+                { name: 'Nutrient Level', value: 82, icon: 'flask', color: '#28a745' },
+                { name: 'Pest Risk', value: 35, icon: 'bug', color: '#dc3545' }
+            ],
+            Legume: [
+                { name: 'Soil Moisture', value: 70, icon: 'tint', color: '#17a2b8' },
+                { name: 'Nutrient Level', value: 90, icon: 'flask', color: '#28a745' },
+                { name: 'Pest Risk', value: 20, icon: 'bug', color: '#dc3545' }
+            ],
+            Other: [
+                { name: 'Soil Moisture', value: 65, icon: 'tint', color: '#17a2b8' },
+                { name: 'Nutrient Level', value: 75, icon: 'flask', color: '#28a745' },
+                { name: 'Pest Risk', value: 30, icon: 'bug', color: '#dc3545' }
+            ]
+        };
+
+        const indicatorSet = indicators[category] || indicators.Other;
+
+        return `
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+            ${indicatorSet.map(ind => `
+                <div style="text-align: center;">
+                    <div style="font-size: 1.5rem; color: ${ind.color}; margin-bottom: 0.5rem;">
+                        <i class="fas fa-${ind.icon}"></i>
+                    </div>
+                    <div style="font-weight: 600; font-size: 0.9rem;">${ind.name}</div>
+                    <div style="background: #e9ecef; height: 10px; border-radius: 5px; margin: 0.5rem 0; overflow: hidden;">
+                        <div style="background: ${ind.color}; height: 100%; width: ${ind.value}%;"></div>
+                    </div>
+                    <div style="font-size: 0.9rem; color: ${ind.color}; font-weight: 600;">${ind.value}%</div>
+                </div>
+            `).join('')}
+        </div>
+    `;
+    }
+
+// Generate timeline visualization
+    function generateTimeline(season) {
+        const timelines = {
+            Winter: [
+                { month: 'Dec', activity: 'Planning', icon: 'clipboard-list' },
+                { month: 'Jan', activity: 'Soil Prep', icon: 'digging' },
+                { month: 'Feb', activity: 'Planting', icon: 'seedling' },
+                { month: 'Mar', activity: 'Early Growth', icon: 'leaf' }
+            ],
+            Spring: [
+                { month: 'Mar', activity: 'Soil Prep', icon: 'digging' },
+                { month: 'Apr', activity: 'Planting', icon: 'seedling' },
+                { month: 'May', activity: 'Growth', icon: 'leaf' },
+                { month: 'Jun', activity: 'Maintenance', icon: 'tractor' }
+            ],
+            Summer: [
+                { month: 'Jun', activity: 'Planting', icon: 'seedling' },
+                { month: 'Jul', activity: 'Growth', icon: 'leaf' },
+                { month: 'Aug', activity: 'Maintenance', icon: 'tractor' },
+                { month: 'Sep', activity: 'Harvest Prep', icon: 'clipboard-check' }
+            ],
+            Fall: [
+                { month: 'Sep', activity: 'Growth', icon: 'leaf' },
+                { month: 'Oct', activity: 'Maintenance', icon: 'tractor' },
+                { month: 'Nov', activity: 'Harvest', icon: 'hand-holding' },
+                { month: 'Dec', activity: 'Post-Harvest', icon: 'warehouse' }
+            ],
+            'All Season': [
+                { month: 'Q1', activity: 'Planning', icon: 'clipboard-list' },
+                { month: 'Q2', activity: 'Planting', icon: 'seedling' },
+                { month: 'Q3', activity: 'Growth', icon: 'leaf' },
+                { month: 'Q4', activity: 'Harvest', icon: 'hand-holding' }
+            ]
+        };
+
+        const timeline = timelines[season] || timelines['All Season'];
+
+        return `
+        <div style="position: relative; padding: 1rem 0;">
+            <!-- Timeline line -->
+            <div style="position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: #dee2e6; transform: translateY(-50%); z-index: 1;"></div>
+            
+            <div style="display: flex; justify-content: space-between; position: relative; z-index: 2;">
+                ${timeline.map((item, i) => `
+                    <div style="text-align: center; flex: 1; position: relative;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: white; border: 2px solid #88B44E; display: flex; align-items: center; justify-content: center; margin: 0 auto; position: relative; z-index: 2;">
+                            <i class="fas fa-${item.icon}" style="color: #88B44E;"></i>
+                        </div>
+                        <div style="margin-top: 0.5rem;">
+                            <div style="font-weight: 600; font-size: 0.9rem;">${item.month}</div>
+                            <div style="font-size: 0.8rem; color: #6c757d;">${item.activity}</div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+    }
+
+
+    // Generate crop-specific report with enhanced visuals
     function generateCropReport(cropCode) {
         $.ajax({
             url: `${API_BASE}/${cropCode}`,
             method: 'GET',
             success: function(crop) {
                 const imageHtml = crop.cropImage
-                    ? `<img src="data:image/png;base64,${crop.cropImage}" alt="${crop.commonName}" style="max-width: 150px; height: auto; border-radius: 8px; margin-bottom: 1rem;">`
-                    : '<div style="height: 120px; background: #f8f9fa; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;"><i class="fas fa-seedling" style="font-size: 2rem; color: #ccc;"></i></div>';
+                    ? `<img src="data:image/png;base64,${crop.cropImage}" alt="${crop.commonName}" style="max-width: 200px; height: auto; border-radius: 12px; margin: 0 auto 1.5rem; display: block; box-shadow: 0 8px 20px rgba(0,0,0,0.12);">`
+                    : '<div style="height: 150px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem;"><i class="fas fa-seedling" style="font-size: 3rem; color: #ccc;"></i></div>';
+
+                // Generate a simple growth chart SVG
+                const growthChart = generateGrowthChart(crop.category, crop.cropSeason);
+
+                // Generate health indicators
+                const healthIndicators = generateHealthIndicators(crop.category);
+
+                // Generate timeline visualization
+                const timeline = generateTimeline(crop.cropSeason);
 
                 Swal.fire({
-                    title: `${crop.commonName} Report`,
+                    title: `<div style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;"><i class="fas fa-chart-bar" style="color: #88B44E;"></i> ${crop.commonName} Detailed Report</div>`,
                     html: `
+                <div style="text-align: left; max-height: 60vh; overflow-y: auto; font-size: 0.95rem;">
                     <div style="text-align: center;">
                         ${imageHtml}
-                        <div style="text-align: left; font-size: 0.9rem;">
-                            <p><strong>Scientific Name:</strong> ${crop.scientificName}</p>
-                            <p><strong>Category:</strong> ${crop.category}</p>
-                            <p><strong>Season:</strong> ${crop.cropSeason}</p>
-                            <p><strong>Field Code:</strong> ${crop.fieldCode}</p>
-                            <p><strong>Log Code:</strong> ${crop.logCode}</p>
-                            <hr>
-                            <h4>Growing Recommendations:</h4>
-                            <p>${getCropRecommendations(crop.category, crop.cropSeason)}</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; border-left: 4px solid #88B44E;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-barcode" style="color: #6c757d;"></i> Crop Code</p>
+                            <p style="font-size: 1.1rem;">${crop.cropCode}</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; border-left: 4px solid #17a2b8;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-tag" style="color: #6c757d;"></i> Category</p>
+                            <p style="font-size: 1.1rem;">${crop.category}</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; border-left: 4px solid #ffc107;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-cloud-sun" style="color: #6c757d;"></i> Season</p>
+                            <p style="font-size: 1.1rem;">${crop.cropSeason}</p>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; border-left: 4px solid #6f42c1;">
+                            <p style="font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;"><i class="fas fa-tractor" style="color: #6c757d;"></i> Field Code</p>
+                            <p style="font-size: 1.1rem;">${crop.fieldCode}</p>
                         </div>
                     </div>
-                `,
+                    
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;"><i class="fas fa-clipboard-list" style="color: #6c757d;"></i> Scientific Information</h4>
+                        <p><strong>Scientific Name:</strong> ${crop.scientificName}</p>
+                        <p><strong>Log Code:</strong> ${crop.logCode}</p>
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;"><i class="fas fa-seedling" style="color: #88B44E;"></i> Growth Progress</h4>
+                        ${growthChart}
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;"><i class="fas fa-heartbeat" style="color: #dc3545;"></i> Health Indicators</h4>
+                        ${healthIndicators}
+                    </div>
+                    
+                    <div style="background: #f8f9fa; padding: 1rem; border-radius: 12px;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;"><i class="fas fa-calendar-alt" style="color: #6c757d;"></i> Growing Timeline</h4>
+                        ${timeline}
+                    </div>
+                    
+                    <div style="margin-top: 1.5rem; padding: 1rem; background: #e8f5e9; border-radius: 12px;">
+                        <h4 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;"><i class="fas fa-lightbulb" style="color: #ffc107;"></i> Recommendations</h4>
+                        <p>${getCropRecommendations(crop.category, crop.cropSeason)}</p>
+                    </div>
+                </div>
+            `,
+                    width: '800px',
                     icon: null,
                     showConfirmButton: false,
                     showCloseButton: true,
@@ -460,7 +877,8 @@ $(document).ready(function() {
         });
     }
 
-    // Generate seasonal report
+
+    // Generate seasonal report with enhanced visuals
     function generateSeasonReport() {
         $.ajax({
             url: `${API_BASE}/all`,
@@ -478,27 +896,120 @@ $(document).ready(function() {
                     }
                 });
 
-                let seasonTable = '<table style="width: 100%; margin: 0.5rem 0; font-size: 0.9rem;"><tr><th>Season</th><th>Image</th><th>Number of Crops</th></tr>';
+                // Create a pie chart for seasonal distribution
+                const pieChart = generatePieChart(seasonCount);
+
+                let seasonTable = `
+                <div style="display: flex; gap: 2rem; margin: 1rem 0; align-items: flex-start;">
+                    <div style="flex: 1;">
+                        ${pieChart}
+                    </div>
+                    <div style="flex: 1;">
+                        <table style="width: 100%; margin: 0.5rem 0; font-size: 0.9rem; border-collapse: collapse;">
+                            <tr style="background: #f8f9fa;">
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Season</th>
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Image</th>
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Number of Crops</th>
+                                <th style="padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6;">Percentage</th>
+                            </tr>`;
+
+                const totalCrops = crops.length;
                 for (const season in seasonCount) {
+                    const percentage = ((seasonCount[season] / totalCrops) * 100).toFixed(1);
                     const imageCell = seasonImage[season]
                         ? `<td><img src="data:image/png;base64,${seasonImage[season]}" alt="${season}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px;"></td>`
                         : '<td><i class="fas fa-seedling" style="font-size: 1.2rem; color: #ccc;"></i></td>';
 
-                    seasonTable += `<tr><td>${season}</td>${imageCell}<td>${seasonCount[season]}</td></tr>`;
+                    seasonTable += `<tr>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-cloud-sun" style="color: #6c757d;"></i> ${season}
+                        </div>
+                    </td>
+                    ${imageCell}
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">${seasonCount[season]}</td>
+                    <td style="padding: 0.75rem; border-bottom: 1px solid #dee2e6;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="background: #e9ecef; height: 8px; border-radius: 4px; flex: 1; overflow: hidden;">
+                                <div style="background: #88B44E; height: 100%; width: ${percentage}%;"></div>
+                            </div>
+                            <span>${percentage}%</span>
+                        </div>
+                    </td>
+                </tr>`;
                 }
-                seasonTable += '</table>';
+                seasonTable += `</table></div></div>`;
 
                 Swal.fire({
-                    title: 'Seasonal Distribution Report',
+                    title: '<div style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;"><i class="fas fa-cloud-sun" style="color: #88B44E;"></i> Seasonal Distribution Report</div>',
                     html: seasonTable,
                     icon: null,
                     showConfirmButton: false,
                     showCloseButton: true,
-                    width: '600px'
+                    width: '900px'
                 });
             }
         });
     }
+
+// Generate pie chart for seasonal distribution
+    function generatePieChart(seasonCount) {
+        const colors = ['#88B44E', '#4E88B4', '#B44E88', '#B4884E', '#4EB488'];
+        const total = Object.values(seasonCount).reduce((a, b) => a + b, 0);
+        let cumulativePercent = 0;
+
+        // Create SVG pie chart
+        const svgPieces = Object.entries(seasonCount).map(([season, count], i) => {
+            const percentage = count / total;
+            const [startX, startY] = getCoordinatesForPercent(cumulativePercent);
+            cumulativePercent += percentage;
+            const [endX, endY] = getCoordinatesForPercent(cumulativePercent);
+            const largeArcFlag = percentage > 0.5 ? 1 : 0;
+
+            const pathData = [
+                `M ${startX} ${startY}`,
+                `A 1 1 0 ${largeArcFlag} 1 ${endX} ${endY}`,
+                `L 0 0`
+            ].join(' ');
+
+            return `<path d="${pathData}" fill="${colors[i % colors.length]}" />`;
+        }).join('');
+
+        // Add legend
+        const legend = Object.entries(seasonCount).map(([season, count], i) => {
+            const percentage = ((count / total) * 100).toFixed(1);
+            return `
+            <div style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <div style="width: 12px; height: 12px; background: ${colors[i % colors.length]}; margin-right: 0.5rem; border-radius: 2px;"></div>
+                <div style="font-size: 0.8rem;">${season}: ${percentage}%</div>
+            </div>
+        `;
+        }).join('');
+
+        return `
+        <div style="text-align: center;">
+            <div style="position: relative; display: inline-block; margin-bottom: 1rem;">
+                <svg width="150" height="150" viewBox="-1 -1 2 2" style="transform: rotate(-90deg);">
+                    ${svgPieces}
+                </svg>
+                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.8rem; font-weight: 600; text-align: center;">
+                    ${total} Crops
+                </div>
+            </div>
+            <div style="margin-top: 1rem;">
+                ${legend}
+            </div>
+        </div>
+    `;
+    }
+
+// Helper function for pie chart coordinates
+    function getCoordinatesForPercent(percent) {
+        const x = Math.cos(2 * Math.PI * percent);
+        const y = Math.sin(2 * Math.PI * percent);
+        return [x, y];
+    }
+
 
     // Generate category report
     function generateCategoryReport() {
@@ -540,7 +1051,7 @@ $(document).ready(function() {
         });
     }
 
-// Generate field report
+   // Generate field report
     function generateFieldReport() {
         $.ajax({
             url: `${API_BASE}/all`,
@@ -585,7 +1096,7 @@ $(document).ready(function() {
         Swal.fire({
             title: 'Generating Report',
             text: 'Please wait while we generate your comprehensive crop report...',
-            icon: 'info',
+            icon: null,
             showConfirmButton: false,
             allowOutsideClick: false,
             didOpen: () => {
@@ -718,21 +1229,40 @@ $(document).ready(function() {
         });
     }
 
-    // Reset form
+    // Update the resetForm function to clear dropdowns
     function resetForm() {
         $cropForm[0].reset();
         $('#editCropCode').val('');
         $editMode.val('false');
+
+        // Reset dropdowns to first option
+        $('#fieldCodeInput').prop('selectedIndex', 0);
+        $('#logCodeInput').prop('selectedIndex', 0);
     }
 
-    // Search functionality
+    // Update the search functionality to work with pagination
     $searchInput.on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
-        const $rows = $cropTableBody.find('tr');
 
-        $rows.each(function() {
-            const text = $(this).text().toLowerCase();
-            $(this).toggle(text.includes(searchTerm));
-        });
+        if (searchTerm) {
+            // Filter crops based on search term
+            const filteredCrops = allCrops.filter(crop =>
+                crop.cropCode.toLowerCase().includes(searchTerm) ||
+                crop.commonName.toLowerCase().includes(searchTerm) ||
+                crop.scientificName.toLowerCase().includes(searchTerm) ||
+                crop.category.toLowerCase().includes(searchTerm) ||
+                crop.cropSeason.toLowerCase().includes(searchTerm) ||
+                crop.fieldCode.toLowerCase().includes(searchTerm) ||
+                crop.logCode.toLowerCase().includes(searchTerm)
+            );
+
+            // Update the table with filtered results
+            populateCropTable(filteredCrops);
+            updatePaginationInfo(1, filteredCrops.length, filteredCrops.length);
+            renderPaginationControls(Math.ceil(filteredCrops.length / itemsPerPage));
+        } else {
+            // If search is cleared, show all crops with pagination
+            renderTableWithPagination();
+        }
     });
 });

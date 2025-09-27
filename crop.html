@@ -91,6 +91,39 @@
                 </tbody>
             </table>
         </div>
+        <!-- Add this right after the table closing tag inside the table-card div -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing <span id="currentItems">0</span> of <span id="totalItems">0</span> items
+            </div>
+            <div class="pagination-controls">
+                <button class="pagination-btn" id="firstPageBtn">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="pagination-btn" id="prevPageBtn">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <div class="pagination-pages" id="paginationPages">
+                    <!-- Page numbers will be generated here -->
+                </div>
+                <button class="pagination-btn" id="nextPageBtn">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button class="pagination-btn" id="lastPageBtn">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+            <div class="pagination-page-size">
+                <label for="pageSizeSelect">Items per page:</label>
+                <select id="pageSizeSelect">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+        </div>
         <div id="loadingSpinner" class="spinner" style="display: none;"></div>
     </div>
 
@@ -143,7 +176,12 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="cropCodeInput"><i class="fas fa-barcode"></i> Crop Code</label>
-                        <input type="text" id="cropCodeInput" name="cropCode" required>
+                        <div class="input-with-button">
+                            <input type="text" id="cropCodeInput" name="cropCode" required readonly>
+                            <button type="button" id="generateCropCodeBtn" class="btn-icon" title="Generate Crop Code">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -182,12 +220,18 @@
 
                     <div class="form-group">
                         <label for="fieldCodeInput"><i class="fas fa-tractor"></i> Field Code</label>
-                        <input type="text" id="fieldCodeInput" name="fieldCode" required>
+                        <select id="fieldCodeInput" name="fieldCode" required>
+                            <option value="">Select Field Code</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label for="logCodeInput"><i class="fas fa-clipboard-list"></i> Log Code</label>
-                        <input type="text" id="logCodeInput" name="logCode" required>
+                        <select id="logCodeInput" name="logCode" required>
+                            <option value="">Select Log Code</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                     </div>
 
                     <div class="form-group full-width">
@@ -202,7 +246,6 @@
                         <small class="form-text text-muted" id="imageHelpText">Please select an image for the crop</small>
                     </div>
                 </div>
-
 
                 <div class="form-actions">
                     <button type="button" class="btn-secondary" id="cancelBtn">

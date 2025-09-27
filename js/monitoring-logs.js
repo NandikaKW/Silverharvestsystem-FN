@@ -43,10 +43,21 @@ document.addEventListener('DOMContentLoaded', function() {
 logForm.addEventListener('submit', handleFormSubmit);
 cancelBtn.addEventListener('click', resetForm);
 observedImageInput.addEventListener('change', previewImage);
-openFormBtn.addEventListener('click', function() {
+
+openFormBtn.addEventListener('click', async function() {
     resetForm();
+
+    // Generate and set the next log code
+    try {
+        const nextCode = await generateNextLogCode();
+        logCodeInput.value = nextCode;
+    } catch (error) {
+        console.error('Error generating log code:', error);
+    }
+
     logFormPopup.classList.add('active');
 });
+
 closePopupBtn.addEventListener('click', function() {
     logFormPopup.classList.remove('active');
     resetForm();
@@ -103,7 +114,34 @@ function previewImage() {
         fileName.textContent = file.name;
     }
 }
+// Function to generate the next log code
+async function generateNextLogCode() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/all`);
+        if (!response.ok) throw new Error('Failed to fetch logs');
 
+        const logs = await response.json();
+
+        if (logs.length === 0) {
+            return "LOG001";
+        }
+
+        // Extract all log codes and find the highest number
+        const logCodes = logs.map(log => log.logCode);
+        const maxCode = Math.max(...logCodes.map(code => {
+            const num = parseInt(code.replace('LOG', ''));
+            return isNaN(num) ? 0 : num;
+        }));
+
+        // Generate next code
+        const nextNum = maxCode + 1;
+        return `LOG${nextNum.toString().padStart(3, '0')}`;
+    } catch (error) {
+        console.error('Error generating log code:', error);
+        // Fallback: return a code based on timestamp
+        return `LOG${Date.now().toString().slice(-3)}`;
+    }
+}
 // Load all logs
 async function loadLogs() {
     try {
@@ -367,6 +405,12 @@ function resetForm() {
     imagePreview.style.display = 'none';
     fileInputLabel.classList.remove('has-file');
     fileName.textContent = 'No file chosen';
+
+    // Clear the log code input when resetting
+    logCodeInput.value = '';
+
+    // Restore required attribute for new entries
+    observedImageInput.setAttribute('required', 'required');
 }
 
 // Perform search function

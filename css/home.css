@@ -1083,7 +1083,120 @@
         justify-content: center;
     }
 }
+contact-info-card {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    box-shadow: 0 15px 35px rgba(136, 180, 78, 0.1);
+    border: 1px solid rgba(136, 180, 78, 0.1);
+}
 
+.contact-form-card {
+    background: #ffffff;
+    box-shadow: 0 15px 35px rgba(136, 180, 78, 0.1);
+    border: 1px solid rgba(136, 180, 78, 0.1);
+}
+
+.contact-icon-wrapper {
+    position: relative;
+}
+
+.contact-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(136, 180, 78, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 1.2rem;
+    transition: all 0.3s ease;
+}
+
+.contact-method:hover .contact-icon {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-5px);
+}
+
+.contact-details h5 {
+    color: var(--dark);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.contact-details p {
+    color: var(--light-text);
+    margin-bottom: 0.25rem;
+}
+
+.social-btn {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    background: rgba(136, 180, 78, 0.1);
+    color: var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.social-btn:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-3px);
+}
+
+.map-card {
+    box-shadow: 0 15px 35px rgba(136, 180, 78, 0.1);
+    border: 1px solid rgba(136, 180, 78, 0.1);
+}
+
+.form-floating label {
+    display: flex;
+    align-items: center;
+}
+
+.form-floating>.form-control:focus~label,
+.form-floating>.form-control:not(:placeholder-shown)~label {
+    opacity: 1;
+    transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+/* Animation for form submission */
+@keyframes formSubmit {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0); }
+}
+
+.btn-primary:active {
+    animation: formSubmit 0.3s ease;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    .contact-info-card,
+    .contact-form-card {
+        padding: 2rem !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .contact-method {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .contact-icon-wrapper {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+
+    .social-links .d-flex {
+        justify-content: center;
+    }
+}
 
 
 

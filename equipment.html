@@ -87,55 +87,40 @@
                 </thead>
                 <tbody id="equipmentTableBody">
                 <!-- Data will be populated from backend -->
-                <!--                <tr>-->
-                <!--                    <td>EQ001</td>-->
-                <!--                    <td>Tractor X5</td>-->
-                <!--                    <td>Heavy Machinery</td>-->
-                <!--                    <td><span class="status-badge status-active">Active</span></td>-->
-                <!--                    <td>STF001</td>-->
-                <!--                    <td>FLD001</td>-->
-                <!--                    <td>-->
-                <!--                        <div class="action-buttons">-->
-                <!--                            <button class="action-btn view-btn"><i class="fas fa-eye"></i></button>-->
-                <!--                            <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>-->
-                <!--                            <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>-->
-                <!--                        </div>-->
-                <!--                    </td>-->
-                <!--                </tr>-->
-                <!--                <tr>-->
-                <!--                    <td>EQ002</td>-->
-                <!--                    <td>Harvester Pro</td>-->
-                <!--                    <td>Harvesting Equipment</td>-->
-                <!--                    <td><span class="status-badge status-maintenance">Maintenance</span></td>-->
-                <!--                    <td>STF002</td>-->
-                <!--                    <td>FLD003</td>-->
-                <!--                    <td>-->
-                <!--                        <div class="action-buttons">-->
-                <!--                            <button class="action-btn view-btn"><i class="fas fa-eye"></i></button>-->
-                <!--                            <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>-->
-                <!--                            <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>-->
-                <!--                        </div>-->
-                <!--                    </td>-->
-                <!--                </tr>-->
-                <!--                <tr>-->
-                <!--                    <td>EQ003</td>-->
-                <!--                    <td>Irrigation System</td>-->
-                <!--                    <td>Watering System</td>-->
-                <!--                    <td><span class="status-badge status-inactive">Inactive</span></td>-->
-                <!--                    <td>STF003</td>-->
-                <!--                    <td>FLD002</td>-->
-                <!--                    <td>-->
-                <!--                        <div class="action-buttons">-->
-                <!--                            <button class="action-btn view-btn"><i class="fas fa-eye"></i></button>-->
-                <!--                            <button class="action-btn edit-btn"><i class="fas fa-edit"></i></button>-->
-                <!--                            <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>-->
-                <!--                        </div>-->
-                <!--                    </td>-->
-                <!--                </tr>-->
                 </tbody>
             </table>
         </div>
         <div id="loadingSpinner" class="spinner" style="display: none;"></div>
+        <!-- Add this after the table in your HTML -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Showing <span id="currentItems">0</span> of <span id="totalItems">0</span> items
+            </div>
+            <div class="pagination-controls">
+                <button class="btn-icon" id="firstPageBtn" title="First Page">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+                <button class="btn-icon" id="prevPageBtn" title="Previous Page">
+                    <i class="fas fa-angle-left"></i>
+                </button>
+                <div class="page-numbers" id="pageNumbers"></div>
+                <button class="btn-icon" id="nextPageBtn" title="Next Page">
+                    <i class="fas fa-angle-right"></i>
+                </button>
+                <button class="btn-icon" id="lastPageBtn" title="Last Page">
+                    <i class="fas fa-angle-double-right"></i>
+                </button>
+            </div>
+            <div class="pagination-page-size">
+                <label for="pageSizeSelect">Items per page:</label>
+                <select id="pageSizeSelect">
+                    <option value="5">5</option>
+                    <option value="10" selected>10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+        </div>
     </div>
 
     <!-- Report Section -->
@@ -187,7 +172,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="equipmentIdInput"><i class="fas fa-barcode"></i> Equipment ID</label>
-                        <input type="text" id="equipmentIdInput" name="equipmentId" required>
+                        <input type="text" id="equipmentIdInput" name="equipmentId" readonly>
                     </div>
 
                     <div class="form-group">
@@ -219,12 +204,18 @@
 
                     <div class="form-group">
                         <label for="staffIdInput"><i class="fas fa-user"></i> Staff ID</label>
-                        <input type="text" id="staffIdInput" name="staffId" required>
+                        <select id="staffIdInput" name="staffId" required>
+                            <option value="">Select Staff ID</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                     </div>
 
                     <div class="form-group">
                         <label for="fieldCodeInput"><i class="fas fa-tractor"></i> Field Code</label>
-                        <input type="text" id="fieldCodeInput" name="fieldCode" required>
+                        <select id="fieldCodeInput" name="fieldCode" required>
+                            <option value="">Select Field Code</option>
+                            <!-- Options will be populated dynamically -->
+                        </select>
                     </div>
                 </div>
 

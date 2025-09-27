@@ -218,9 +218,13 @@
                         <textarea id="addressInput" name="address" required></textarea>
                     </div>
 
+                    <!-- With this: -->
                     <div class="form-group">
-                        <label for="logCodeInput"><i class="fas fa-clipboard-list"></i> Log Code</label>
-                        <input type="text" id="logCodeInput" name="logCode" required>
+                        <label for="logCodeSelect"><i class="fas fa-clipboard-list"></i> Log Code</label>
+                        <select id="logCodeSelect" name="logCode" required>
+                            <option value="">Select Log Code</option>
+                            <!-- Options will be populated by JavaScript -->
+                        </select>
                     </div>
                 </div>
 

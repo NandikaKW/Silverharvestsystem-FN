@@ -624,7 +624,88 @@ tr:hover {
     font-size: 1.4rem;
     color: var(--text-color);
 }
+/* Pagination Styles */
+.pagination-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
 
+.pagination-info {
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 0.3rem;
+}
+
+.page-btn {
+    min-width: 35px;
+    height: 35px;
+    border: 1px solid var(--border-color);
+    background-color: white;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: var(--tran-03);
+}
+
+.page-btn:hover {
+    background-color: #f1f1f1;
+}
+
+.page-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.pagination-page-size {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.pagination-page-size label {
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.pagination-page-size select {
+    padding: 0.4rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: white;
+}
+
+/* Responsive styles for pagination */
+@media (max-width: 768px) {
+    .pagination-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .page-numbers {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
 @keyframes spin {
     to { transform: rotate(360deg); }
 }

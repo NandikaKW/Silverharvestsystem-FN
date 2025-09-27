@@ -791,6 +791,58 @@
                 padding: 10px;     /* adjust padding */
             }
         }
+        /* Responsive fix for cart table */
+        .cart-table th,
+        .cart-table td {
+            white-space: normal;
+            word-break: break-word;
+        }
+
+        /* Mobile/Tablets - stack into cards */
+        @media (max-width: 991px) {
+            .cart-table thead {
+                display: none; /* Hide header row */
+            }
+
+            .cart-table,
+            .cart-table tbody,
+            .cart-table tr,
+            .cart-table td {
+                display: block;
+                width: 100%;
+            }
+
+            .cart-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                padding: 10px;
+                background: #fff;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            }
+
+            .cart-table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+            }
+
+            /* Auto-generate labels from header text */
+            .cart-table td:nth-of-type(1)::before { content: "Product"; }
+            .cart-table td:nth-of-type(2)::before { content: "Image"; }
+            .cart-table td:nth-of-type(3)::before { content: "Quantity"; }
+            .cart-table td:nth-of-type(4)::before { content: "Price"; }
+            .cart-table td:nth-of-type(5)::before { content: "Actions"; }
+
+            .cart-table td::before {
+                position: absolute;
+                left: 10px;
+                width: 45%;
+                text-align: left;
+                font-weight: 600;
+                color: #555;
+            }
+        }
 
     </style>
 
@@ -1193,20 +1245,34 @@
         </div>
     </div>
 
-    <!-- Add to Cart Form -->
+    <!-- Replace the Add to Cart Form section with this code -->
     <div class="form-card">
         <h5><i class="fas fa-plus-circle text-primary"></i> Add New Item</h5>
         <form id="cartForm">
             <div class="row g-3">
                 <div class="col-md-4">
                     <div class="form-floating">
-                        <input type="text" id="userId" class="form-control" placeholder="User ID" required>
+                        <select id="userId" class="form-select" required>
+                            <option value="">Select User ID</option>
+                            <option value="U001">U001</option>
+                            <option value="U002">U002</option>
+                            <option value="U003">U003</option>
+                            <option value="U004">U004</option>
+                            <option value="U005">U005</option>
+                        </select>
                         <label for="userId"><i class="fas fa-user text-primary"></i> User ID</label>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-floating">
-                        <input type="text" id="cropCode" class="form-control" placeholder="Crop Code" required>
+                        <select id="cropCode" class="form-select" required>
+                            <option value="">Select Crop Code</option>
+                            <option value="C001">C001 - Tea</option>
+                            <option value="C002">C002 - Rubber</option>
+                            <option value="C003">C003 - Coconut</option>
+                            <option value="C004">C004 - Rice</option>
+                            <option value="C005">C005 - Spices</option>
+                        </select>
                         <label for="cropCode"><i class="fas fa-leaf text-primary"></i> Crop Code</label>
                     </div>
                 </div>
@@ -1297,18 +1363,47 @@
 
 
 
-<!-- JavaScript -->
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     const API_BASE = "http://localhost:8080/api/v1/cart";
+
+    // Add this JavaScript code to handle the dropdown change events
+    document.addEventListener('DOMContentLoaded', function() {
+        const userIdSelect = document.getElementById('userId');
+        const cropCodeSelect = document.getElementById('cropCode');
+
+        // Auto-load cart when user ID is selected
+        userIdSelect.addEventListener('change', function() {
+            if (this.value) {
+                loadCart(this.value);
+            }
+        });
+
+        // Auto-load cart if userId already has a value (from page load)
+        if (userIdSelect.value) {
+            loadCart(userIdSelect.value);
+        }
+    });
 
     // Handle Add to Cart with animation
     document.getElementById("cartForm").addEventListener("submit", async (e) => {
         e.preventDefault();
 
+        const userId = document.getElementById("userId").value;
+        const cropCode = document.getElementById("cropCode").value;
+
+        if (!userId || !cropCode) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Selection Required',
+                text: 'Please select both User ID and Crop Code',
+            });
+            return;
+        }
+
         const cartData = {
-            userId: document.getElementById("userId").value,
-            cropCode: document.getElementById("cropCode").value,
+            userId: userId,
+            cropCode: cropCode,
             quantity: parseInt(document.getElementById("quantity").value),
         };
 
@@ -1364,15 +1459,37 @@
                     loadCart(cartData.userId);
                 }, 800);
 
-                // Reset form
-                document.getElementById("cropCode").value = "";
+                // Show success message with SweetAlert
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Item Added!',
+                    text: 'Product has been added to your cart',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+
+                // Reset form - FIXED FOR DROPDOWN
+                document.getElementById("cropCode").selectedIndex = 0;
                 document.getElementById("quantity").value = "1";
             } else {
-                alert("Error adding to cart");
+                // Show error with SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Error adding item to cart',
+                });
                 document.body.removeChild(flyingItem);
             }
         } catch (err) {
             console.error("Error:", err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Network Error',
+                text: 'Could not connect to the server',
+            });
             document.body.removeChild(flyingItem);
         }
     });
@@ -1482,37 +1599,103 @@
             });
 
             if (!res.ok) {
-                alert("Error updating item");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Update Failed',
+                    text: 'Error updating item quantity',
+                });
             } else {
                 loadCart(userId);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Quantity Updated',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
             }
         } catch (err) {
             console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: 'Error updating item quantity',
+            });
         }
     }
 
     // Remove Item
     async function removeFromCart(cartId, userId) {
-        if (!confirm("Are you sure you want to remove this item from your cart?")) return;
+        // SweetAlert confirmation dialog
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "This item will be removed from your cart",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        });
+
+        if (!result.isConfirmed) return;
 
         try {
             const res = await fetch(`${API_BASE}/${cartId}`, { method: "DELETE" });
             if (res.ok) {
                 loadCart(userId);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Removed!',
+                    text: 'Item has been removed from your cart',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000
+                });
             } else {
-                alert("Error removing item");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to remove item from cart',
+                });
             }
         } catch (err) {
             console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to remove item from cart',
+            });
         }
     }
 
     // Clear Cart
     async function clearCart() {
-        const userId = document.getElementById("userId").value;
-        if (!userId) return alert("Enter User ID first");
+        const userIdSelect = document.getElementById("userId");
+        const userId = userIdSelect.value;
 
-        if (!confirm("Are you sure you want to clear your entire cart?")) return;
+        if (!userId) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'User ID Required',
+                text: 'Please select a User ID first',
+            });
+            return;
+        }
+
+        // SweetAlert confirmation dialog
+        const result = await Swal.fire({
+            title: 'Are you sure?',
+            text: "Your entire cart will be cleared",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, clear cart!'
+        });
+
+        if (!result.isConfirmed) return;
 
         try {
             const res = await fetch(`${API_BASE}/user/${userId}`, { method: "DELETE" });
@@ -1529,80 +1712,65 @@
             </tr>
           `;
                 updateCartSummary(0);
+                document.getElementById('cartBadge').textContent = '0';
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Cart Cleared!',
+                    text: 'Your cart has been cleared successfully',
+                });
             } else {
-                alert("Error clearing cart");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to clear cart',
+                });
             }
         } catch (err) {
             console.error(err);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to clear cart',
+            });
         }
     }
 
-    // Checkout Popup Functionality
+    // Checkout Functionality
     const checkoutBtn = document.getElementById("checkoutBtn");
-    const closeCheckoutBtn = document.getElementById("closeCheckoutBtn");
-    const cancelCheckoutBtn = document.getElementById("cancelCheckoutBtn");
-    const checkoutPopup = document.getElementById("checkoutPopup");
-    const checkoutForm = document.getElementById("checkoutForm");
 
-    checkoutBtn.addEventListener("click", () => {
+    checkoutBtn.addEventListener("click", async () => {
         const userId = document.getElementById("userId").value;
         if (!userId) {
-            alert("Please enter your User ID first");
+            Swal.fire({
+                icon: 'warning',
+                title: 'User ID Required',
+                text: 'Please select a User ID first',
+            });
             return;
         }
-        // Redirect to order.html with userId as query param (optional)
+
+        // Check if cart is empty
+        try {
+            const res = await fetch(`${API_BASE}/user/${userId}`);
+            if (res.ok) {
+                const items = await res.json();
+                if (items.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Empty Cart',
+                        text: 'Your cart is empty. Add items before checkout.',
+                    });
+                    return;
+                }
+            }
+        } catch (err) {
+            console.error("Error checking cart:", err);
+        }
+
+        // Redirect to order.html with userId as query param
         window.location.href = `orders.html?userId=${encodeURIComponent(userId)}`;
     });
-
-    // closeCheckoutBtn.addEventListener("click", closeCheckout);
-    // cancelCheckoutBtn.addEventListener("click", closeCheckout);
-    //
-    // function closeCheckout() {
-    //     checkoutPopup.classList.remove("active");
-    //     document.body.style.overflow = "auto";
-    // }
-    //
-    // // Close when clicking outside the form
-    // checkoutPopup.addEventListener("click", (e) => {
-    //     if (e.target === checkoutPopup) {
-    //         closeCheckout();
-    //     }
-    // });
-
-    // // Form submission
-    // checkoutForm.addEventListener("submit", (e) => {
-    //     e.preventDefault();
-    //
-    //     // Get form values
-    //     const fullName = document.getElementById("fullName").value;
-    //     const email = document.getElementById("email").value;
-    //     const phone = document.getElementById("phone").value;
-    //     const address = document.getElementById("address").value;
-    //     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
-    //     const cardNumber = document.getElementById("cardNumber").value;
-    //     const expiryDate = document.getElementById("expiryDate").value;
-    //     const cvv = document.getElementById("cvv").value;
-    //
-    //     // Here you would typically send the data to a server
-    //     console.log({
-    //         fullName,
-    //         email,
-    //         phone,
-    //         address,
-    //         paymentMethod,
-    //         cardNumber,
-    //         expiryDate,
-    //         cvv
-    //     });
-    //
-    //     // Show success message
-    //     alert('Order placed successfully!');
-    //     checkoutForm.reset();
-    //     closeCheckout();
-    //
-    //     // In a real application, you would clear the cart after successful purchase
-    //     // clearCart();
-    // });
 
     // Auto-load cart when page loads (if userId field has a value)
     window.onload = () => {
@@ -1612,7 +1780,6 @@
         }
     };
 </script>
-<!-- Store End -->
 
 
 <!-- Testimonial Start -->
@@ -1673,78 +1840,182 @@
 <!-- Contact Start -->
 <div class="container-xxl contact py-5" id="contact">
     <div class="container">
-        <div class="section-title text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+        <div class="section-title text-center mx-auto wow fadeInUp" data-wow-delay="0.1s" style="max-width: 800px;">
             <span class="contact-badge mb-3">
-                <i class="fas fa-comment-dots me-2"></i> Contact Us
+                <i class="fas fa-comment-dots me-2"></i> Get In Touch
             </span>
-            <h1 class="display-5 fw-bold mb-4">Connect With <span class="text-primary">Silver Harvest</span></h1>
+            <h1 class="display-5 fw-bold mb-4">Let's Grow <span class="text-primary">Together</span></h1>
             <p class="lead text-muted">
-                Have questions about our plantation monitoring system? Our team is here to help farmers,
-                researchers, and businesses achieve smarter agriculture.
+                Ready to transform your plantation management? Our team is here to answer your questions and help you get started with our advanced monitoring solutions.
             </p>
         </div>
 
-        <div class="row g-4 justify-content-center mt-5">
-            <!-- Email -->
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.2s">
-                <div class="contact-card text-center p-4 rounded-4 h-100">
-                    <div class="contact-icon mx-auto mb-4">
-                        <i class="fas fa-envelope fa-2x"></i>
+        <div class="row g-5 mt-4">
+            <!-- Contact Information -->
+            <div class="col-lg-5 wow fadeInUp" data-wow-delay="0.2s">
+                <div class="contact-info-card p-5 rounded-4 h-100">
+                    <h3 class="mb-4 text-primary">Contact Information</h3>
+                    <p class="mb-4">Connect with us through any of the following channels. Our agricultural experts are ready to assist you.</p>
+
+                    <div class="contact-method d-flex align-items-start mb-4">
+                        <div class="contact-icon-wrapper me-4">
+                            <div class="contact-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                        </div>
+                        <div class="contact-details">
+                            <h5>Our Location</h5>
+                            <p>123 Plantation Road, Kandy, Sri Lanka</p>
+                        </div>
                     </div>
-                    <h4 class="mb-3">Email Us</h4>
-                    <div class="contact-details">
-                        <a href="mailto:info@silverharvest.com" class="d-block mb-2">
-                            <i class="fas fa-at me-2 text-primary"></i> info@silverharvest.com
-                        </a>
-                        <a href="mailto:support@silverharvest.com" class="d-block">
-                            <i class="fas fa-life-ring me-2 text-primary"></i> support@silverharvest.com
-                        </a>
+
+                    <div class="contact-method d-flex align-items-start mb-4">
+                        <div class="contact-icon-wrapper me-4">
+                            <div class="contact-icon">
+                                <i class="fas fa-phone-alt"></i>
+                            </div>
+                        </div>
+                        <div class="contact-details">
+                            <h5>Phone Number</h5>
+                            <p>+94 77 123 4567</p>
+                            <p>+94 71 987 6543</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-method d-flex align-items-start mb-4">
+                        <div class="contact-icon-wrapper me-4">
+                            <div class="contact-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                        </div>
+                        <div class="contact-details">
+                            <h5>Email Address</h5>
+                            <p>info@silverharvest.com</p>
+                            <p>support@silverharvest.com</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-method d-flex align-items-start">
+                        <div class="contact-icon-wrapper me-4">
+                            <div class="contact-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="contact-details">
+                            <h5>Business Hours</h5>
+                            <p>Mon - Fri: 9:00 AM - 6:00 PM</p>
+                            <p>Sat: 9:00 AM - 1:00 PM</p>
+                        </div>
+                    </div>
+
+                    <div class="social-links mt-5 pt-3">
+                        <h5 class="mb-3">Follow Us</h5>
+                        <div class="d-flex gap-3">
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-linkedin-in"></i>
+                            </a>
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                            <a href="#" class="social-btn">
+                                <i class="fab fa-youtube"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Phone -->
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.4s">
-                <div class="contact-card text-center p-4 rounded-4 h-100">
-                    <div class="contact-icon mx-auto mb-4">
-                        <i class="fas fa-phone-alt fa-2x"></i>
-                    </div>
-                    <h4 class="mb-3">Call Us</h4>
-                    <div class="contact-details">
-                        <a href="tel:+94771234567" class="d-block mb-2">
-                            <i class="fas fa-mobile-alt me-2 text-primary"></i> +94 77 123 4567
-                        </a>
-                        <a href="tel:+94719876543" class="d-block">
-                            <i class="fas fa-phone-volume me-2 text-primary"></i> +94 71 987 6543
-                        </a>
-                    </div>
+            <!-- Contact Form -->
+            <div class="col-lg-7 wow fadeInUp" data-wow-delay="0.4s">
+                <div class="contact-form-card p-5 rounded-4">
+                    <h3 class="mb-4 text-primary">Send Us a Message</h3>
+                    <form id="contactForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="name" placeholder="Your Name" required>
+                                    <label for="name"><i class="fas fa-user me-2"></i>Your Name</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="email" class="form-control" id="email" placeholder="Your Email" required>
+                                    <label for="email"><i class="fas fa-envelope me-2"></i>Your Email</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="tel" class="form-control" id="phone" placeholder="Your Phone">
+                                    <label for="phone"><i class="fas fa-phone me-2"></i>Your Phone</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating">
+                                    <input type="text" class="form-control" id="subject" placeholder="Subject" required>
+                                    <label for="subject"><i class="fas fa-tag me-2"></i>Subject</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <select class="form-select" id="inquiryType">
+                                        <option selected>General Inquiry</option>
+                                        <option>Technical Support</option>
+                                        <option>Sales Question</option>
+                                        <option>Partnership</option>
+                                        <option>Other</option>
+                                    </select>
+                                    <label for="inquiryType"><i class="fas fa-question-circle me-2"></i>Inquiry Type</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-floating">
+                                    <textarea class="form-control" placeholder="Leave a message here" id="message" style="height: 150px" required></textarea>
+                                    <label for="message"><i class="fas fa-comment-dots me-2"></i>Your Message</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="newsletter">
+                                    <label class="form-check-label" for="newsletter">
+                                        Subscribe to our newsletter for updates on plantation technology
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button class="btn btn-primary py-3 px-5 w-100" type="submit">
+                                    <i class="fas fa-paper-plane me-2"></i> Send Message
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
+        </div>
 
-            <!-- Location -->
-            <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.6s">
-                <div class="contact-card text-center p-4 rounded-4 h-100">
-                    <div class="contact-icon mx-auto mb-4">
-                        <i class="fas fa-map-marker-alt fa-2x"></i>
+        <!-- Map Section -->
+        <div class="row mt-5 wow fadeInUp" data-wow-delay="0.6s">
+            <div class="col-12">
+                <div class="map-card rounded-4 overflow-hidden">
+                    <div class="card-header bg-primary text-white p-3">
+                        <h5 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i> Our Location</h5>
                     </div>
-                    <h4 class="mb-3">Visit Us</h4>
-                    <div class="contact-details">
-                        <p class="mb-2">
-                            <i class="fas fa-building me-2 text-primary"></i> Silver Harvest HQ
-                        </p>
-                        <p class="mb-0">
-                            <i class="fas fa-map-pin me-2 text-primary"></i> Kandy, Sri Lanka
-                        </p>
+                    <div class="map-container" style="height: 400px;">
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.258389099966!2d80.63577427499656!3d7.293882492682976!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3ae366266498acd3%3A0x411a3818a1e03c35!2sKandy!5e0!3m2!1sen!2slk!4v1700000000000!5m2!1sen!2slk"
+                                width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
                     </div>
-                    <a href="#" class="btn btn-link mt-3">
-                        <i class="fas fa-directions me-2"></i> Get Directions
-                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <!-- Contact End -->
+
 
 
 
@@ -1756,7 +2027,7 @@
                 <!-- Office Info -->
                 <div class="col-lg-3 col-md-6">
                     <div class="footer-brand mb-4">
-                        <img src="images/Plant-logo.png" alt="Silver Harvest" class="footer-logo mb-3">
+                        <img src="images/Plant-logo-01.png" alt="Silver Harvest" class="footer-logo mb-3">
                         <p class="footer-text">Advanced plantation monitoring for sustainable agriculture</p>
                     </div>
                     <div class="footer-contact">
@@ -1819,8 +2090,8 @@
                         </div>
                     </div>
                     <div class="mt-4">
-                        <a href="#" class="btn btn-outline-primary rounded-pill">
-                            <i class="fas fa-calendar-alt me-2"></i> Book Appointment
+                        <a href="orders.html" class="btn btn-outline-primary rounded-pill">
+                            <i class="fas fa-calendar-alt me-2"></i> Place an Order
                         </a>
                     </div>
                 </div>
